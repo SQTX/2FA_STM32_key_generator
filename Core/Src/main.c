@@ -18,12 +18,19 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "crc.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
+#include "sha1.h"
+//#include "base32.h"
+#include "TOTP.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -88,8 +95,12 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
+  MX_CRC_Init();
   /* USER CODE BEGIN 2 */
-  printf("Hello World!\n");
+  uint8_t hmacKey[] = {0x4d, 0x79, 0x4c, 0x65, 0x67, 0x6f, 0x44, 0x6f, 0x6f, 0x72};               // Secret key
+  TOTP(hmacKey, 10, 30);
+  uint32_t newCode = getCodeFromTimestamp(1557414000);       // Current timestamp since Unix epoch in seconds// Secret key, Secret key length, Timestep (30s)
+  printf("Code:\t\t%u\n", newCode);
   /* USER CODE END 2 */
 
   /* Infinite loop */
