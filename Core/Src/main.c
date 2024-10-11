@@ -97,12 +97,41 @@ int main(void)
   MX_USART2_UART_Init();
   MX_CRC_Init();
   /* USER CODE BEGIN 2 */
+//  ************************************************************************
+//  Stale:
   const uint32_t TOTP_TIMESTAMP = 30;
-  const uint32_t EPOCH_TIMESTAMP = 1557414000;
+//  const uint32_t EPOCH_TIMESTAMP = 1557414000;	// Hard coded Timestamp
+  const int8_t TIMEZONE = 2;		// In Poland: UTC+2h (local_time_hour - 2h)
 
+//  ************************************************************************
+//  Pobranie czasu:
+  struct tm datetime;
+//  27.09.2024 - 16:35:00
+//  datetime.tm_hour = 16;      	// Moja godzina
+//  datetime.tm_min = 35;           // Moja minut
+//  datetime.tm_sec = 0;            // Moja sekunda
+//  datetime.tm_mday = 27;          // Mój dzień
+//  datetime.tm_mon = (9-1);        // Mój miesiąc -1m
+//  datetime.tm_year = (2024-1900); // Mój rok -1900y
+
+//  Current hard coded time:
+  datetime.tm_hour = (13 - TIMEZONE);  // Moja godzina
+  datetime.tm_min = 47;          	 // Moja minut
+  datetime.tm_sec = 0;           	 // Moja sekunda
+  datetime.tm_mday = 11;         	 // Mój dzień
+  datetime.tm_mon = (10-1);       	 // Mój miesiąc -1m
+  datetime.tm_year = (2024-1900); 	 // Mój rok -1900y
+
+    time_t t = mktime(&datetime);   // Convert datatime to timestamp
+//    printf("Epoch timestamp: %ld\n", (uint32_t) t);
+    const uint32_t EPOCH_TIMESTAMP = (uint32_t) t;		// Casting from time_t to uint32
+    printf("Epoch timestamp: %ld\n", EPOCH_TIMESTAMP);
+
+//    ************************************************************************
+//    Operacja na kluczu:
   // Pobranie zakodowanego klucza:
-//	const char encoded[] = "JV4UYZLHN5CG633S";		// Word
-	const char encoded[] = "JBSWY3DPEHPK3PXP";		// Not a word
+	const char encoded[] = "JV4UYZLHN5CG633S";		// Word
+//	const char encoded[] = "JBSWY3DPEHPK3PXP";		// Not a word
 	uint8_t encodedLength = {(sizeof encoded)-1};
 
 	printf("Code: %s\t| Size: %u\n", encoded, encodedLength);
@@ -139,11 +168,13 @@ int main(void)
         printf("\n");
     }
 
+//  ************************************************************************
   TOTP(decoded, decodedLength, TOTP_TIMESTAMP);
   free(decoded);
 //  TOTP(decoded, 10, 30);
   uint32_t newCode = getCodeFromTimestamp(EPOCH_TIMESTAMP);       // Current timestamp since Unix epoch in seconds// Secret key, Secret key length, Timestep (30s)
   printf("Code:\t\t%lu\n", newCode);
+//  ************************************************************************
   /* USER CODE END 2 */
 
   /* Infinite loop */
