@@ -24,10 +24,11 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+//Std:
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-
+//My:
 #include "dataConverter.h"
 #include "keyGenerator.h"
 #include "dataFromUser.h"
@@ -62,20 +63,39 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-typedef struct tm DataTime_t;
+typedef struct tm DateTime_t;
+
+//********************************************************************************************
+//CONSTS
+//********************************************************************************************
+const int8_t TIMEZONE = {2};					// Poland: UTC+2h (local_time_hour - 2h)
+
+//const char encoded[] = {"JV4UYZLHN5CG633S"};	// Encoded key is a word
+const char encoded[] = {"JBSWY3DPEHPK3PXP"};	// Encoded key isn't a word
 
 
-//************************************************************************
-//Conversion Encoded key to normal key
-//************************************************************************
-const int8_t TIMEZONE = 2;		// In Poland: UTC+2h (local_time_hour - 2h)
-
-//const char encoded[] = "JV4UYZLHN5CG633S";	// Encoded key is a word
-const char encoded[] = "JBSWY3DPEHPK3PXP";		// Encoded key isn't a word
-// ************************************************************************
-// Functions:
-// ************************************************************************
-uint32_t getTimeFromUser(DataTime_t *dataTimePtr) {
+//********************************************************************************************
+//Functions:
+//********************************************************************************************
+/**
+ * @brief Prompts the user to enter a date and time, then converts it to a UTC timestamp.
+ *
+ * This function prompts the user to input a date and time in the format "DD-MM-YYYY,hh:mm:ss" via UART.
+ * It collects the input character by character and parses it using the @p getDataTimeViaKeyboard function.
+ * After receiving valid input, the function prints both the local time and the UTC time (adjusted for timezone),
+ * and returns the UTC timestamp.
+ *
+ * @param[out] dataTimePtr  Pointer to a @p DateTime_t structure that will store the parsed date and time.
+ *
+ * @return Returns the UTC timestamp as a 32-bit unsigned integer upon successful input.
+ *         Returns 0 if no valid timestamp could be retrieved.
+ *
+ * @note The function expects the UART interface (e.g., @p huart2) to be properly configured beforehand.
+ *
+ * @warning The input must be in the correct format for the function to work as expected. The time zone adjustment
+ *          is applied based on the @p TIMEZONE constant.
+ */
+uint32_t getTimeFromUser(DateTime_t *dataTimePtr) {
 	uint8_t flag = {1};
 
 	printf("Write datatime [DD-MM-YYYY,hh:mm:ss]:\n");
@@ -84,11 +104,7 @@ uint32_t getTimeFromUser(DataTime_t *dataTimePtr) {
 		uint8_t value = {0};
 
 		if (HAL_UART_Receive(&huart2, &value, 1, 0) == HAL_OK) {
-//			if (value == '\r' || value == '\n') {
-//				printf("\n\r");
-//			} else {
-//				printf("%c", value);
-//			}
+			// TODO: Try to print out each char inserted
 			flag = getDataTimeViaKeyboard(value, dataTimePtr);
 
 			if (flag == 0) {
@@ -99,8 +115,7 @@ uint32_t getTimeFromUser(DataTime_t *dataTimePtr) {
 				dataTimePtr->tm_hour -= TIMEZONE;
 				time_t utcTimestamp = mktime(dataTimePtr);
 				printf("UTC:\t %d-%d-%d,", dataTimePtr->tm_mday, dataTimePtr->tm_mon + 1, dataTimePtr->tm_year + 1900);
-				printf("%d:%d:%d\n", dataTimePtr->tm_hour - TIMEZONE, dataTimePtr->tm_min, dataTimePtr->tm_sec);
-
+				printf("%d:%d:%d\n", dataTimePtr->tm_hour, dataTimePtr->tm_min, dataTimePtr->tm_sec);
 
 //				printf("EPOCH TimeStamp: %ld\n", (uint32_t)utcTimestamp);
 				return (uint32_t)utcTimestamp;
@@ -143,25 +158,25 @@ int main(void)
   MX_USART2_UART_Init();
   MX_CRC_Init();
   /* USER CODE BEGIN 2 */
-//  ************************************************************************
+//  ********************************************************************************************
 //  Get current time from user:
-//  ************************************************************************
-  DataTime_t datetime;
-  DataTime_t *dataTimePtr = &datetime;
+//  ********************************************************************************************
+  DateTime_t datetime;
+  DateTime_t *dataTimePtr = {&datetime};
 
-  const uint32_t EPOCH_TIMESTAMP = getTimeFromUser(dataTimePtr);
+  const uint32_t EPOCH_TIMESTAMP = {getTimeFromUser(dataTimePtr)};	// Get current data and time from user via keyboard
   printf("Epoch TimeStamp: %ld\n", EPOCH_TIMESTAMP);
 
-//  ************************************************************************
+//  ********************************************************************************************
 //  Conversion Encoded key to normal key
-//  ************************************************************************
-	uint8_t encodedLength = {(sizeof encoded)-1};	// Encoded key length (without '\n')
+//  ********************************************************************************************
+	uint8_t encodedLength = {(sizeof encoded)-1};					// Encoded key length (without '\n')
 	printf("Code: %s\t| Size: %u\n", encoded, encodedLength);
 
 
-	uint8_t *key = NULL;
-	uint8_t keySize = base32ToHex(encoded, encodedLength, &key);
-	if(key == NULL) printf("[ERROR] Failed to allocate memory.\n");
+	uint8_t *key = {NULL};											// Empty pointer for key array
+	uint8_t keySize = {base32ToHex(encoded, encodedLength, &key)};	// Convert key from BASE32 to Hex
+	if(key == NULL) printf("[ERROR] Failed to allocate memory.\n");	// ERROR alert
 
 
 	printf("Token size: %u\n", keySize);
@@ -172,13 +187,13 @@ int main(void)
 	}
 	printf("\n");
 
-//  ************************************************************************
+//  ********************************************************************************************
 //  Generate TOTP TOKEN
-//  ************************************************************************
-    uint32_t token = generateToken(key, keySize, EPOCH_TIMESTAMP);
+//  ********************************************************************************************
+    uint32_t token = {generateToken(key, keySize, EPOCH_TIMESTAMP)};	// Generate TOTP token
     free(key);
-    printf("Code:\t\t%lu\n", token);
-//  ************************************************************************
+    printf("Code:\t\t%06lu\n", token);
+//  ********************************************************************************************
   /* USER CODE END 2 */
 
   /* Infinite loop */

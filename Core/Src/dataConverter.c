@@ -2,16 +2,21 @@
  * dataConverter.c
  *
  *  Created on: Oct 13, 2024
- *      Author: sqtx
+ *      Author: Jakub SQTX Sitarczyk
  */
+
 #include "dataConverter.h"
 
 
+//********************************************************************************************
+// PUBLIC
+//********************************************************************************************
 int8_t base32ToHex(const char *encoded, const uint8_t encodedLength, uint8_t **decoded) {
-	const uint8_t decodedLength = {UNBASE32_LEN(encodedLength)};	// Length of decoded key
+	const uint8_t decodedLength = {UNBASE32_LEN(encodedLength)};			// Length of decoded key
 
 
 	*decoded = (uint8_t*) malloc( (decodedLength+1) * sizeof(uint8_t) );	// Dynamic memory allocation
+
 //	Check if malloc was successful and cleaning
 	if (*decoded == NULL) {
 		printf("[ERROR] Failed to allocate memory.\n");
@@ -25,10 +30,10 @@ int8_t base32ToHex(const char *encoded, const uint8_t encodedLength, uint8_t **d
 
 
     if (decodedSize < 0) {
-        printf("Błąd dekodowania\n");
+        printf("[ERROR] Decoding error\n");
         return -1;  // ERROR
     } else if (decodedSize == decodedLength){
     	return decodedSize;
     }
-    return 0;
+    return 0;	// Something wrong
 }
