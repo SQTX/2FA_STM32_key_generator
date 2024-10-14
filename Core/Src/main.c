@@ -30,6 +30,7 @@
 
 #include "dataConverter.h"
 #include "keyGenerator.h"
+#include "dataFromUser.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -97,8 +98,7 @@ int main(void)
   MX_CRC_Init();
   /* USER CODE BEGIN 2 */
 //  ************************************************************************
-//  Stale:
-//  const uint32_t TOTP_TIMESTAMP = 30;
+//  CONSTS:
 //  const uint32_t EPOCH_TIMESTAMP = 1557414000;	// Hard coded Timestamp
   const int8_t TIMEZONE = 2;		// In Poland: UTC+2h (local_time_hour - 2h)
 
@@ -121,9 +121,9 @@ int main(void)
   datetime.tm_mon = (10-1);       	 // Mój miesiąc -1m
   datetime.tm_year = (2024-1900); 	 // Mój rok -1900y
 
-    time_t t = mktime(&datetime);   					// Convert datatime to timestamp
-    const uint32_t EPOCH_TIMESTAMP = (uint32_t) t;		// Casting from time_t to uint32
-    printf("Epoch timestamp: %ld\n", EPOCH_TIMESTAMP);
+  time_t t = mktime(&datetime);   					// Convert datatime to timestamp
+  const uint32_t EPOCH_TIMESTAMP = (uint32_t) t;		// Casting from time_t to uint32
+  printf("Epoch timestamp: %ld\n", EPOCH_TIMESTAMP);
 
 //  ************************************************************************
 //  Conversion Encoded key to normal key
@@ -158,8 +158,33 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+    struct tm foo;
+    struct tm *fptr = &foo;
+
+    printf("Write datatime:\n");
   while (1)
   {
+	  uint8_t value, flag;
+
+	  if (HAL_UART_Receive(&huart2, &value, 1, 0) == HAL_OK) {
+//		  if (value == '\r' || value == '\n') {
+//			  printf("\n\r");
+//		  } else {
+//			  printf("%c", value);
+//		  }
+		  flag = getDataTimeViaKeyboard(value, fptr);
+		  if (flag == 0) {
+			  printf("GMT: %d-%d-%d,", fptr->tm_mday,fptr->tm_mon + 1,fptr->tm_year + 1900);
+			  printf("%d:%d:%d\n", fptr->tm_hour,fptr->tm_min,fptr->tm_sec);
+
+			  printf("UTC: %d-%d-%d,", fptr->tm_mday,fptr->tm_mon + 1,fptr->tm_year + 1900);
+			  printf("%d:%d:%d\n", fptr->tm_hour - TIMEZONE,fptr->tm_min,fptr->tm_sec);
+
+			  time_t bra = mktime(fptr);
+			  printf("TimeStamp: %ld\n", (uint32_t)bra);
+		  }
+	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
