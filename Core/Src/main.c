@@ -62,7 +62,53 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+typedef struct tm DataTime_t;
 
+
+//************************************************************************
+//Conversion Encoded key to normal key
+//************************************************************************
+const int8_t TIMEZONE = 2;		// In Poland: UTC+2h (local_time_hour - 2h)
+
+//const char encoded[] = "JV4UYZLHN5CG633S";	// Encoded key is a word
+const char encoded[] = "JBSWY3DPEHPK3PXP";		// Encoded key isn't a word
+// ************************************************************************
+// Functions:
+// ************************************************************************
+uint32_t getTimeFromUser(DataTime_t *dataTimePtr) {
+	uint8_t flag = {1};
+
+	printf("Write datatime [DD-MM-YYYY,hh:mm:ss]:\n");
+	fflush(stdout);
+	while(flag != 0) {
+		uint8_t value = {0};
+
+		if (HAL_UART_Receive(&huart2, &value, 1, 0) == HAL_OK) {
+//			if (value == '\r' || value == '\n') {
+//				printf("\n\r");
+//			} else {
+//				printf("%c", value);
+//			}
+			flag = getDataTimeViaKeyboard(value, dataTimePtr);
+
+			if (flag == 0) {
+//				time_t localTimestamp = mktime(dataTimePtr);
+				printf("Local:\t %d-%d-%d,", dataTimePtr->tm_mday, dataTimePtr->tm_mon + 1, dataTimePtr->tm_year + 1900);
+				printf("%d:%d:%d\n", dataTimePtr->tm_hour, dataTimePtr->tm_min, dataTimePtr->tm_sec);
+
+				dataTimePtr->tm_hour -= TIMEZONE;
+				time_t utcTimestamp = mktime(dataTimePtr);
+				printf("UTC:\t %d-%d-%d,", dataTimePtr->tm_mday, dataTimePtr->tm_mon + 1, dataTimePtr->tm_year + 1900);
+				printf("%d:%d:%d\n", dataTimePtr->tm_hour - TIMEZONE, dataTimePtr->tm_min, dataTimePtr->tm_sec);
+
+
+//				printf("EPOCH TimeStamp: %ld\n", (uint32_t)utcTimestamp);
+				return (uint32_t)utcTimestamp;
+			}
+		}
+	}
+	return 0;
+}
 /* USER CODE END 0 */
 
 /**
@@ -98,38 +144,17 @@ int main(void)
   MX_CRC_Init();
   /* USER CODE BEGIN 2 */
 //  ************************************************************************
-//  CONSTS:
-//  const uint32_t EPOCH_TIMESTAMP = 1557414000;	// Hard coded Timestamp
-  const int8_t TIMEZONE = 2;		// In Poland: UTC+2h (local_time_hour - 2h)
-
+//  Get current time from user:
 //  ************************************************************************
-//  Pobranie czasu:
-  struct tm datetime;
-//  27.09.2024 - 16:35:00
-//  datetime.tm_hour = 16;      	// Moja godzina
-//  datetime.tm_min = 35;           // Moja minut
-//  datetime.tm_sec = 0;            // Moja sekunda
-//  datetime.tm_mday = 27;          // Mój dzień
-//  datetime.tm_mon = (9-1);        // Mój miesiąc -1m
-//  datetime.tm_year = (2024-1900); // Mój rok -1900y
+  DataTime_t datetime;
+  DataTime_t *dataTimePtr = &datetime;
 
-//  Current hard coded time:
-  datetime.tm_hour = (15 - TIMEZONE);  // Moja godzina
-  datetime.tm_min = 49;          	 // Moja minut
-  datetime.tm_sec = 0;           	 // Moja sekunda
-  datetime.tm_mday = 13;         	 // Mój dzień
-  datetime.tm_mon = (10-1);       	 // Mój miesiąc -1m
-  datetime.tm_year = (2024-1900); 	 // Mój rok -1900y
-
-  time_t t = mktime(&datetime);   					// Convert datatime to timestamp
-  const uint32_t EPOCH_TIMESTAMP = (uint32_t) t;		// Casting from time_t to uint32
-  printf("Epoch timestamp: %ld\n", EPOCH_TIMESTAMP);
+  const uint32_t EPOCH_TIMESTAMP = getTimeFromUser(dataTimePtr);
+  printf("Epoch TimeStamp: %ld\n", EPOCH_TIMESTAMP);
 
 //  ************************************************************************
 //  Conversion Encoded key to normal key
 //  ************************************************************************
-//	const char encoded[] = "JV4UYZLHN5CG633S";		// Encoded key is a word
-	const char encoded[] = "JBSWY3DPEHPK3PXP";		// Encoded key isn't a word
 	uint8_t encodedLength = {(sizeof encoded)-1};	// Encoded key length (without '\n')
 	printf("Code: %s\t| Size: %u\n", encoded, encodedLength);
 
@@ -158,33 +183,8 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
-    struct tm foo;
-    struct tm *fptr = &foo;
-
-    printf("Write datatime:\n");
   while (1)
   {
-	  uint8_t value, flag;
-
-	  if (HAL_UART_Receive(&huart2, &value, 1, 0) == HAL_OK) {
-//		  if (value == '\r' || value == '\n') {
-//			  printf("\n\r");
-//		  } else {
-//			  printf("%c", value);
-//		  }
-		  flag = getDataTimeViaKeyboard(value, fptr);
-		  if (flag == 0) {
-			  printf("GMT: %d-%d-%d,", fptr->tm_mday,fptr->tm_mon + 1,fptr->tm_year + 1900);
-			  printf("%d:%d:%d\n", fptr->tm_hour,fptr->tm_min,fptr->tm_sec);
-
-			  printf("UTC: %d-%d-%d,", fptr->tm_mday,fptr->tm_mon + 1,fptr->tm_year + 1900);
-			  printf("%d:%d:%d\n", fptr->tm_hour - TIMEZONE,fptr->tm_min,fptr->tm_sec);
-
-			  time_t bra = mktime(fptr);
-			  printf("TimeStamp: %ld\n", (uint32_t)bra);
-		  }
-	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
