@@ -75,6 +75,8 @@ const int8_t TIMEZONE = {2};					// Poland: UTC+2h (local_time_hour - 2h)
 const char encoded[] = {"JBSWY3DPEHPK3PXP"};	// Encoded key isn't a word
 
 
+RTC_TimeTypeDef rtcTime = {0};
+RTC_DateTypeDef rtcDate = {0};
 //********************************************************************************************
 //Functions:
 //********************************************************************************************
@@ -96,27 +98,39 @@ const char encoded[] = {"JBSWY3DPEHPK3PXP"};	// Encoded key isn't a word
  * @warning The input must be in the correct format for the function to work as expected. The time zone adjustment
  *          is applied based on the @p TIMEZONE constant.
  */
-uint32_t getTimeFromUser(DateTime_t *dataTimePtr) {
+uint32_t getTimeFromUser() {
+	DateTime_t datetime;
+
 	uint8_t flag = {1};
 
-	printf("Write datatime [DD-MM-YYYY,hh:mm:ss]:\n");
+	printf("Enter your current time [DD-MM-YYYY,hh:mm:ss]:\n");
 	fflush(stdout);
 	while(flag != 0) {
 		uint8_t value = {0};
 
 		if (HAL_UART_Receive(&huart2, &value, 1, 0) == HAL_OK) {
 			// TODO: Try to print out each char inserted
-			flag = getDataTimeViaKeyboard(value, dataTimePtr);
+			flag = getDataTimeViaKeyboard(value, &datetime);
 
 			if (flag == 0) {
 //				time_t localTimestamp = mktime(dataTimePtr);
-				printf("Local:\t %d-%d-%d,", dataTimePtr->tm_mday, dataTimePtr->tm_mon + 1, dataTimePtr->tm_year + 1900);
-				printf("%d:%d:%d\n", dataTimePtr->tm_hour, dataTimePtr->tm_min, dataTimePtr->tm_sec);
+				printf("Local:\t %d-%d-%d,", datetime.tm_mday, datetime.tm_mon + 1, datetime.tm_year + 1900);
+				printf("%d:%d:%d\n", datetime.tm_hour, datetime.tm_min, datetime.tm_sec);
 
-				dataTimePtr->tm_hour -= TIMEZONE;
-				time_t utcTimestamp = mktime(dataTimePtr);
-				printf("UTC:\t %d-%d-%d,", dataTimePtr->tm_mday, dataTimePtr->tm_mon + 1, dataTimePtr->tm_year + 1900);
-				printf("%d:%d:%d\n", dataTimePtr->tm_hour, dataTimePtr->tm_min, dataTimePtr->tm_sec);
+				datetime.tm_hour -= TIMEZONE;
+				time_t utcTimestamp = mktime(&datetime);
+				printf("UTC:\t %d-%d-%d,", datetime.tm_mday, datetime.tm_mon + 1, datetime.tm_year + 1900);
+				printf("%d:%d:%d\n", datetime.tm_hour, datetime.tm_min, datetime.tm_sec);
+
+//				Set time in RTC:
+				rtcTime.Hours = datetime.tm_hour;
+				rtcTime.Minutes = datetime.tm_min;
+				rtcTime.Seconds = datetime.tm_sec;
+				HAL_RTC_SetTime(&hrtc, &rtcTime, RTC_FORMAT_BIN);
+				rtcDate.Year = datetime.tm_year + 1900 - 2000;
+				rtcDate.Month = datetime.tm_mon + 1;
+				rtcDate.Date = datetime.tm_mday;
+				HAL_RTC_SetDate(&hrtc, &rtcDate, RTC_FORMAT_BIN);
 
 //				printf("EPOCH TimeStamp: %ld\n", (uint32_t)utcTimestamp);
 				return (uint32_t)utcTimestamp;
@@ -124,6 +138,41 @@ uint32_t getTimeFromUser(DateTime_t *dataTimePtr) {
 		}
 	}
 	return 0;
+}
+
+
+uint8_t initClockRTC() {
+	HAL_RTC_GetTime(&hrtc, &rtcTime, RTC_FORMAT_BIN);
+	HAL_RTC_GetDate(&hrtc, &rtcDate, RTC_FORMAT_BIN);
+
+	if(rtcDate.Year == 0 && rtcTime.Hours == 0) {
+		printf("RTC\t[not configured]\n");
+		getTimeFromUser();
+		return 1;
+	}
+	printf("RTC\t[OK]\n");
+	printf("Your local time: [%02d-%02d-%04d, %02d:%02d:%02d]\n", rtcDate.Date, rtcDate.Month, rtcDate.Year + 2000, rtcTime.Hours + TIMEZONE, rtcTime.Minutes, rtcTime.Seconds);
+	return 0;
+}
+
+
+uint32_t getTimeStamp() {
+	HAL_RTC_GetDate(&hrtc, &rtcDate, RTC_FORMAT_BIN);
+	HAL_RTC_GetTime(&hrtc, &rtcTime, RTC_FORMAT_BIN);
+
+
+	DateTime_t currentTime;
+	currentTime.tm_sec = rtcTime.Seconds;
+	currentTime.tm_min = rtcTime.Minutes;
+	currentTime.tm_hour = rtcTime.Hours;
+
+	currentTime.tm_mday = rtcDate.Date;
+	currentTime.tm_mon = rtcDate.Month - 1;
+	currentTime.tm_year = (rtcDate.Year + 2000) - 1900;
+
+
+	time_t utcTimestamp = mktime(&currentTime);
+	return (uint32_t)utcTimestamp;
 }
 /* USER CODE END 0 */
 
@@ -161,13 +210,11 @@ int main(void)
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
 //  ********************************************************************************************
-//  Get current time from user:
+//  Initializing the RTC clock
 //  ********************************************************************************************
-  DateTime_t datetime;
-  DateTime_t *dataTimePtr = {&datetime};
-
-  const uint32_t EPOCH_TIMESTAMP = {getTimeFromUser(dataTimePtr)};	// Get current data and time from user via keyboard
-  printf("Epoch TimeStamp: %ld\n", EPOCH_TIMESTAMP);
+  printf("-----------------------------------------------------------\n");
+  initClockRTC();
+  printf("Epoch TimeStamp: %ld\n", getTimeStamp());					// Show current epoch timestamp
 
 //  ********************************************************************************************
 //  Conversion Encoded key to normal key
@@ -188,24 +235,44 @@ int main(void)
 	    printf("0x%x ", key[i]);
 	}
 	printf("\n");
-
-//  ********************************************************************************************
-//  Generate TOTP TOKEN
-//  ********************************************************************************************
-    uint32_t token = {generateToken(key, keySize, EPOCH_TIMESTAMP)};	// Generate TOTP token
-    free(key);
-    printf("Code:\t\t%06lu\n", token);
 //  ********************************************************************************************
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  printf("-----------------------------------------------------------\n");
+
   while (1)
   {
+//	  ********************************************************************************************
+//	  Generate TOTP TOKEN
+//	  ********************************************************************************************
+//	  TODO: Use an interrupt
+	  uint32_t token = {generateToken(key, keySize, getTimeStamp())};	// Generate TOTP token
+	  printf("Code:\t\t%06lu\n", token);
+
+
+	  HAL_RTC_GetDate(&hrtc, &rtcDate, RTC_FORMAT_BIN);
+	  HAL_RTC_GetTime(&hrtc, &rtcTime, RTC_FORMAT_BIN);
+	  uint8_t nowSeconds = rtcTime.Seconds;
+	  uint8_t secToRegenerate = {0};
+
+	  if (nowSeconds < 30) {
+		  secToRegenerate = 30 - nowSeconds;
+	  } else if (nowSeconds > 30 && nowSeconds < 60) {
+		  secToRegenerate = 60 - nowSeconds;
+	  } else {
+		  secToRegenerate = 30;
+	  }
+
+	  HAL_Delay(secToRegenerate*1000);	// New token in 0' and 30' second
+//	  HAL_Delay(30000);					// New token every 30sec
+//	  ********************************************************************************************
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
   }
+  free(key);
   /* USER CODE END 3 */
 }
 
