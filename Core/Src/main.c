@@ -72,13 +72,18 @@ typedef struct tm DateTime_t;
 const int8_t TIMEZONE = {2};					// Poland: UTC+2h (local_time_hour - 2h)
 
 //const char encoded[] = {"JV4UYZLHN5CG633S"};	// Encoded key is a word
-const char encoded[] = {"JBSWY3DPEHPK3PXP"};	// Encoded key isn't a word
+const char encodedKey[] = {"JBSWY3DPEHPK3PXP"};	// Encoded key isn't a word
 
 
+//********************************************************************************************
+//GLOBAL VARIABLES (RAM)
+//********************************************************************************************
 RTC_TimeTypeDef rtcTime = {0};
 RTC_DateTypeDef rtcDate = {0};
+
+
 //********************************************************************************************
-//Functions:
+//Clock functions:
 //********************************************************************************************
 /**
  * @brief Prompts the user to enter a date and time, then converts it to a UTC timestamp.
@@ -141,6 +146,21 @@ uint32_t getTimeFromUser() {
 }
 
 
+/**
+ * @brief Initializes the RTC clock and checks if it is already configured.
+ *
+ * This function retrieves the current time and date from the RTC (Real-Time Clock) using the HAL library.
+ * If the RTC is not configured (i.e., both the year and hours are zero), it prompts the user to input the correct time.
+ * If the RTC is properly configured, it prints the current local time adjusted for the specified time zone.
+ *
+ * @return Returns 1 if the RTC was not configured and the user was prompted to input the time.
+ *         Returns 0 if the RTC was already configured and the time was successfully read.
+ *
+ * @note The RTC must be initialized and set before calling this function. The local time is adjusted
+ *       by the @p TIMEZONE constant.
+ *
+ * @warning The function assumes the RTC is in binary format (RTC_FORMAT_BIN) when reading the time and date.
+ */
 uint8_t initClockRTC() {
 	HAL_RTC_GetTime(&hrtc, &rtcTime, RTC_FORMAT_BIN);
 	HAL_RTC_GetDate(&hrtc, &rtcDate, RTC_FORMAT_BIN);
@@ -156,6 +176,20 @@ uint8_t initClockRTC() {
 }
 
 
+/**
+ * @brief Retrieves the current date and time from the RTC and converts it to a UTC timestamp.
+ *
+ * This function reads the current date and time from the hardware RTC (Real-Time Clock) using the
+ * HAL library and converts it to a UTC timestamp. The timestamp is returned as a 32-bit unsigned integer.
+ *
+ * @return Returns the current time as a UTC timestamp (Epoch time) in seconds since 1970.
+ *
+ * @note The function assumes that the RTC is correctly initialized and set to the current time.
+ *       It uses the @p mktime function to convert the date and time to a UTC timestamp.
+ *
+ * @warning The RTC must be in binary format (RTC_FORMAT_BIN) when read, and the year is assumed to be
+ *          within the 2000s range (i.e., RTC returns years as offsets from the year 2000).
+ */
 uint32_t getTimeStamp() {
 	HAL_RTC_GetDate(&hrtc, &rtcDate, RTC_FORMAT_BIN);
 	HAL_RTC_GetTime(&hrtc, &rtcTime, RTC_FORMAT_BIN);
@@ -174,6 +208,46 @@ uint32_t getTimeStamp() {
 	time_t utcTimestamp = mktime(&currentTime);
 	return (uint32_t)utcTimestamp;
 }
+
+
+//********************************************************************************************
+//Token generator functions:
+//********************************************************************************************
+//void addKey() {
+//	printf("Wpisz nowy klucz: \n");
+////	keyBase32 = typeText();
+//	char keyBase32[] = {"JBSWY3DPEHPK3PXP"};
+//
+//	uint8_t keyBase32Length = {(sizeof keyBase32)-1};					// Encoded key length (without '\n')
+//	uint8_t *key = {NULL};												// Empty pointer for key array
+//	uint8_t keySize = {base32ToHex(keyBase32, keyBase32Length, &key)};	// Convert key from BASE32 to Hex
+//	if(key == NULL) printf("[ERROR] Failed to allocate memory.\n");		// ERROR alert
+////	Print key in HEX:
+//	printf("Dekodowany tekst: ");
+//	for (int i = 0; i < keySize; i++) {
+//	    printf("0x%x ", key[i]);
+//	}
+//	printf("\n");
+//
+//
+//	printf("Nadaj kluczowi nazwe: \n");
+////	keyName = typeText()
+////	uint8_t keyNameLength = {(sizeof keyName)-1};
+//
+////	TODO: CRC
+//
+////	saveKeyInMemory(key, keySize, keyName, keyNameLength)
+//}
+//
+//
+//void getKey(keyName) {
+////	keySize = getKeyFromMemory(keyName, key);
+////	if (keySize = (sizeof keyBase32)-1)
+////		retun key
+//}
+
+
+
 /* USER CODE END 0 */
 
 /**
@@ -219,12 +293,12 @@ int main(void)
 //  ********************************************************************************************
 //  Conversion Encoded key to normal key
 //  ********************************************************************************************
-	uint8_t encodedLength = {(sizeof encoded)-1};					// Encoded key length (without '\n')
-	printf("Code: %s\t| Size: %u\n", encoded, encodedLength);
+	uint8_t encodedLength = {(sizeof encodedKey)-1};					// Encoded key length (without '\n')
+	printf("Code: %s\t| Size: %u\n", encodedKey, encodedLength);
 
 
 	uint8_t *key = {NULL};											// Empty pointer for key array
-	uint8_t keySize = {base32ToHex(encoded, encodedLength, &key)};	// Convert key from BASE32 to Hex
+	uint8_t keySize = {base32ToHex(encodedKey, encodedLength, &key)};	// Convert key from BASE32 to Hex
 	if(key == NULL) printf("[ERROR] Failed to allocate memory.\n");	// ERROR alert
 
 
