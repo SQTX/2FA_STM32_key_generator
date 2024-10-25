@@ -81,9 +81,13 @@ typedef struct tm DateTime_t;
 //********************************************************************************************
 //GLOBAL VARIABLES (RAM)
 //********************************************************************************************
-//RTC_TimeTypeDef rtcTime = {0};
-//RTC_DateTypeDef rtcDate = {0};
+RTC_TimeTypeDef rtcTime = {0};
+RTC_DateTypeDef rtcDate = {0};
 
+uint8_t* key = {NULL};
+char* name = {NULL};
+uint8_t keySize = {0};
+uint8_t nameSize = {0};
 
 //********************************************************************************************
 //Key functions:
@@ -174,13 +178,15 @@ int main(void)
   MX_RTC_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
+//  resetMemoryTest();		// TEST FUNCTION
+//  addKeyTest();			// TEST FUNCTION
+
+  printf("===========================================================\n");
+  printf("Device initialization process\n");
   printf("-----------------------------------------------------------\n");
 //  ********************************************************************************************
 //  Initializing the Memory
 //  ********************************************************************************************
-//  resetMemoryTest();		// TEST FUNCTION
-//  addKeyTest();			// TEST FUNCTION
-
   if(checkMemory()){
 	  printf("Memory status\t\t\t[OK]\n");
   } else {
@@ -195,6 +201,12 @@ int main(void)
   }
 
 //  ********************************************************************************************
+//  Initializing the RTC clock
+//  ********************************************************************************************
+  initClockRTC(&rtcTime, &rtcDate);											// Initializing the RTC clock
+
+
+//  ********************************************************************************************
 //  Get general data from memory
 //  ********************************************************************************************
   uint8_t generalData[6] = {0};
@@ -205,13 +217,12 @@ int main(void)
   uint8_t currentKeyAddr = generalData[4];
 
   printf("-----------------------------------------------------------\n");
-  printf("General data: \n");
-  printf("Init: %x\n", generalData[0]);
-  printf("Last ADDR: %x\n", generalData[1]);
-  printf("MaxKey: %u\n", generalData[2]);
-  printf("KeysNum: %u\n", generalData[3]);
-  printf("CurrAddr: %u\n", generalData[4]);
-  printf("Free: %x\n", generalData[5]);
+  printf("General information: \n");
+  printf("-----------------------------------------------------------\n");
+  printLocalTime(&rtcTime, &rtcDate);
+  printf("Epoch TimeStamp:\t\t[%ld]\n", getTimeStamp(&rtcTime, &rtcDate));	// Show current epoch TimeStamp
+  printf("Maximum keys in memory:\t\t[%u]\n", MAX_KEYS);
+  printf("Current number of keys:\t\t[%u]\n", keysNumber);
 
 
 //  ********************************************************************************************
@@ -229,38 +240,30 @@ int main(void)
 
 
 //  Trim zeros and optimization arrays:
-  uint8_t keySize = {0};
-  uint8_t nameSize = {0};
   keySize = trimZeros(currentKey, 13);
   nameSize = trimZeros(currentKeyName, 5);
 
 //  Dynamic allocated key array:
-  uint8_t* key = (uint8_t*) malloc( keySize * sizeof(uint8_t) );
+  key = (uint8_t*) malloc( keySize * sizeof(uint8_t) );
   for(int i = 0; i < keySize; i++) {
 	  key[i] = currentKey[i];
   }
 //  Dynamic allocated name array:
-  char* name = (char*) malloc( (nameSize+1) * sizeof(char) );
+  name = (char*) malloc( (nameSize+1) * sizeof(char) );
   for(int i = 0; i < nameSize; i++) {
 	  name[i] = (char)currentKeyName[i];
   }
   name[nameSize] = '\0';
 
 
-  printf("Current used key: %s\n", name);	// Print current used key
-  printf("Key: ");
-  for(int i = 0; i < 13; i++) printf("%x ", currentKey[i]);
-  printf("\n");
+  printf("Current used key:\t\t['%s']\n", name);				// Print current used key name
+//  printf("Key: ");
+//  for(int i = 0; i < 13; i++) printf("%x ", currentKey[i]);
+//  printf("\n");
 
+  printf("===========================================================\n");
 
   /*
-//  ********************************************************************************************
-//  Initializing the RTC clock
-//  ********************************************************************************************
-  printf("-----------------------------------------------------------\n");
-  initClockRTC(&rtcTime, &rtcDate);										// Initializing the RTC clock
-  printf("Epoch TimeStamp: %ld\n", getTimeStamp(&rtcTime, &rtcDate));	// Show current epoch timestamp
-
 //  ********************************************************************************************
 //  Conversion Encoded key to normal key
 //  ********************************************************************************************
@@ -280,7 +283,6 @@ int main(void)
 	    printf("0x%x ", key[i]);
 	}
 	printf("\n");
-
 */
   /* USER CODE END 2 */
 
@@ -290,30 +292,30 @@ int main(void)
 
   while (1)
   {
-////	  ********************************************************************************************
-////	  Generate TOTP TOKEN
-////	  ********************************************************************************************
-////	  TODO: Use an interrupt
-//	  uint32_t token = {generateToken(key, keySize, getTimeStamp(&rtcTime, &rtcDate))};	// Generate TOTP token
-//	  printf("Code:\t\t%06lu\n", token);
-//
-//
-//	  HAL_RTC_GetDate(&hrtc, &rtcDate, RTC_FORMAT_BIN);
-//	  HAL_RTC_GetTime(&hrtc, &rtcTime, RTC_FORMAT_BIN);
-//	  uint8_t nowSeconds = rtcTime.Seconds;
-//	  uint8_t secToRegenerate = {0};
-//
-//	  if (nowSeconds < 30) {
-//		  secToRegenerate = 30 - nowSeconds;
-//	  } else if (nowSeconds > 30 && nowSeconds < 60) {
-//		  secToRegenerate = 60 - nowSeconds;
-//	  } else {
-//		  secToRegenerate = 30;
-//	  }
-//
-//	  HAL_Delay(secToRegenerate*1000);	// New token in 0' and 30' second
-////	  HAL_Delay(30000);					// New token every 30sec
-////	  ********************************************************************************************
+//	  ********************************************************************************************
+//	  Generate TOTP TOKEN
+//	  ********************************************************************************************
+//	  TODO: Use an interrupt
+	  uint32_t token = {generateToken(key, keySize, getTimeStamp(&rtcTime, &rtcDate))};	// Generate TOTP token
+	  printf("Token:\t\t[%06lu]\n", token);
+
+
+	  HAL_RTC_GetDate(&hrtc, &rtcDate, RTC_FORMAT_BIN);
+	  HAL_RTC_GetTime(&hrtc, &rtcTime, RTC_FORMAT_BIN);
+	  uint8_t nowSeconds = rtcTime.Seconds;
+	  uint8_t secToRegenerate = {0};
+
+	  if (nowSeconds < 30) {
+		  secToRegenerate = 30 - nowSeconds;
+	  } else if (nowSeconds > 30 && nowSeconds < 60) {
+		  secToRegenerate = 60 - nowSeconds;
+	  } else {
+		  secToRegenerate = 30;
+	  }
+
+	  HAL_Delay(secToRegenerate*1000);	// New token in 0' and 30' second
+//	  HAL_Delay(30000);					// New token every 30sec
+//	  ********************************************************************************************
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
