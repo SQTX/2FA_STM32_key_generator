@@ -89,20 +89,6 @@ char* name = {NULL};
 uint8_t keySize = {0};
 uint8_t nameSize = {0};
 
-//********************************************************************************************
-//Key functions:
-//********************************************************************************************
-uint8_t trimZeros(uint8_t* arr, uint8_t length) {
-	uint8_t new_length = length;
-
-    // Iteruj od końca, aż napotkasz niezerowy element
-    while (new_length > 0 && arr[new_length - 1] == 0) {
-        new_length--; // Zmniejsz nową długość tablicy
-    }
-
-    return new_length; // Zwróć nową długość bez końcowych zer
-}
-
 
 //********************************************************************************************
 //Token generator functions:

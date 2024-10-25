@@ -37,3 +37,15 @@ int8_t base32ToHex(const char *encoded, const uint8_t encodedLength, uint8_t **d
     }
     return 0;	// Something wrong
 }
+
+
+uint8_t trimZeros(uint8_t* arr, uint8_t length) {
+	uint8_t new_length = length;
+
+    // Iteruj od końca, aż napotkasz niezerowy element
+    while (new_length > 0 && arr[new_length - 1] == 0) {
+        new_length--; // Zmniejsz nową długość tablicy
+    }
+
+    return new_length; // Zwróć nową długość bez końcowych zer
+}
