@@ -53,15 +53,116 @@
 #define KEY_FRAME_CRC_SIZE			1	// Check sum
 
 
+/**
+ * @brief Verifies the EEPROM initialization status by checking specific memory locations.
+ *
+ * This function reads two specific bytes from EEPROM memory: an initialization byte
+ * and the last used memory address. It verifies whether these bytes match the expected
+ * values, indicating that the EEPROM has been properly initialized.
+ *
+ * @return Returns @p true if the EEPROM memory is correctly initialized; otherwise, returns @p false.
+ *
+ * @note The function loops until successful reads are performed for the required memory locations.
+ *       It assumes that constants @p INIT_BYTE and @p LAST_MEMORY_ADDR define the expected values.
+ *
+ * @warning This function may enter an infinite loop if the EEPROM is unresponsive or if there is
+ *          a hardware issue with the I2C connection.
+ */
 bool checkMemory();
+
+/**
+ * @brief Initializes EEPROM memory by calculating the maximum number of keys and storing general data.
+ *
+ * This function initializes the EEPROM memory by calculating the maximum number of keys that can be stored
+ * based on the provided memory size and a predefined key frame size. It then writes general data into
+ * EEPROM memory and verifies if initialization was successful by calling @p checkMemory.
+ *
+ * @param[in] memorySizeBytes The total size of EEPROM memory in bytes.
+ *
+ * @return Returns @p true if the initialization was successful, or @p false if it failed.
+ *
+ * @note The function assumes that @p KEY_FRAME_SIZE defines the size of each key frame in bytes, and
+ *       that @p writeGeneralDataInMemory handles the actual memory writing operation.
+ *
+ * @warning Ensure that the @p memorySizeBytes parameter is accurate and that the EEPROM memory is accessible.
+ *          The success of initialization depends on the @p checkMemory function returning @p true.
+ */
 bool initMemory(uint32_t memorySizeBytes);
 
+
+/**
+ * @brief Reads general data from a specified EEPROM memory location.
+ *
+ * This function reads a block of general data from the EEPROM, starting from a predefined
+ * memory address. It loops until a successful read operation is performed.
+ *
+ * @param[out] generalData Pointer to a buffer where the general data will be stored.
+ *
+ * @note The function uses a blocking approach, looping until @p eeprom_read returns @p HAL_OK.
+ *       The starting address of the data and the expected data size are defined by
+ *       @p FIRST_MEMORY_ADDR and @p GENERAL_DATA_SIZE, respectively.
+ *
+ * @warning Ensure that @p generalData points to a valid buffer large enough to hold
+ *          @p GENERAL_DATA_SIZE bytes. The function will enter an infinite loop if the EEPROM
+ *          is unresponsive, so hardware readiness should be verified before calling.
+ */
 void readGeneralDataFromMemory(uint8_t *generalData);
+
+/**
+ * @brief Reads a specific key or searches for a key by name in EEPROM memory.
+ *
+ * This function retrieves a key and its associated name from EEPROM memory, either from a given
+ * address or by searching through all keys if a name is provided. The function can handle cases
+ * where certain keys are marked with an overwrite flag, which indicates they should be skipped.
+ *
+ * @param[out] data       Pointer to the buffer where the retrieved key data will be stored.
+ *                        The buffer must have sufficient space for both key and name data.
+ * @param[in]  keysNumber Total number of keys stored in memory.
+ * @param[in]  keyAddr    The address of the key to read. If set to 0, the function searches
+ *                        for the key by name instead.
+ * @param[in]  searchName Pointer to the name of the key to search for. If @p keyAddr is not 0,
+ *                        this parameter is ignored.
+ *
+ * @return Returns @p 0 on success, or @p 1 if the key is not found or if @p searchName is
+ *         @p NULL and @p keyAddr is 0.
+ *
+ * @note The function skips keys marked with an overwrite flag (0x80) when searching by name.
+ *       It uses several constants such as @p KEY_FRAME_KEY_SIZE, @p KEY_FRAME_NAME_SIZE, and
+ *       @p KEY_FRAME_SIZE for memory offsets and frame sizes.
+ *
+ * @warning Ensure that @p data has adequate memory allocated to store both key and name data.
+ *          The function will enter a blocking state until all EEPROM read operations succeed.
+ */
 uint8_t readKeyFromMemory(uint8_t *data, uint8_t keysNumber, uint8_t keyAddr, uint8_t *searchName);
 
+
+/**
+ * @brief Writes general configuration data to EEPROM memory.
+ *
+ * This function populates a buffer with general configuration data, such as initialization byte,
+ * maximum keys, current number of keys, and the last used key address, and then writes it to the
+ * EEPROM memory. Each byte is written sequentially to avoid potential issues with larger
+ * multi-byte writes.
+ *
+ * @param[in] maxKeys         Maximum number of keys that can be stored in memory.
+ * @param[in] keysNumber      Current number of keys stored in memory.
+ * @param[in] lastUsedKeyAddr Address of the last key used.
+ *
+ * @note The function uses @p FIRST_MEMORY_ADDR as the starting EEPROM address for the data,
+ *       and writes each byte individually to address potential issues with block writes.
+ *       The buffer size for general data is defined by @p GENERAL_DATA_SIZE.
+ *
+ * @warning If an error occurs during the EEPROM write, the function calls @p Error_Handler,
+ *          which may stop execution or handle the error in an application-specific manner.
+ */
 void writeGeneralDataInMemory(uint8_t maxKeys, uint8_t keysNumber, uint8_t lastUsedKeyAddr);	// Default values for this args are: NONE, 0, FIRST_KEY_ADDR
+
+
 void writeKeyInMemory(uint32_t keyAddr, uint8_t *keyFrame);
+
+
 void makeKeyFrame(uint8_t *keyFrame, uint8_t keyIndex, uint8_t keyLength, uint8_t *key, uint8_t nameLength, uint8_t *name, bool overwirteFlag, uint8_t crc);
+
 
 void resetMemoryTest();
 void addKeyTest();

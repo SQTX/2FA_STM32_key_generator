@@ -41,6 +41,7 @@ void readGeneralDataFromMemory(uint8_t *generalData) {
 	while (eeprom_read(FIRST_MEMORY_ADDR, generalData, GENERAL_DATA_SIZE) != HAL_OK) {}
 }
 
+
 uint8_t readKeyFromMemory(uint8_t *data, uint8_t keysNumber, uint8_t keyAddr, uint8_t *searchName) {
 	const uint8_t JUMP_TO_KEY_VALUE = 2;
 	const uint8_t JUMP_TO_NAME_VALUE = 15;
@@ -121,14 +122,16 @@ void writeGeneralDataInMemory(uint8_t maxKeys, uint8_t keysNumber, uint8_t lastU
 	generalData[5] = 0x00;					// Free space
 
 
-	if(eeprom_write(FIRST_MEMORY_ADDR, generalData, sizeof(generalData)) != HAL_OK) Error_Handler();
+//	if(eeprom_write(FIRST_MEMORY_ADDR, generalData, sizeof(generalData)) != HAL_OK) Error_Handler();	//TODO: Tu pewnie będzie taki sam problem jak w addKeyTest
+	for(int i = 0; i < GENERAL_DATA_SIZE; i++) {
+		if(eeprom_write(FIRST_MEMORY_ADDR+i, &generalData[i], sizeof(generalData[i])) != HAL_OK) Error_Handler();
+	}
 }
 
 
 void writeKeyInMemory(uint32_t keyAddr, uint8_t *keyFrame) {
-	if(eeprom_write(keyAddr, keyFrame, KEY_FRAME_SIZE) != HAL_OK) Error_Handler();
+	if(eeprom_write(keyAddr, keyFrame, KEY_FRAME_SIZE) != HAL_OK) Error_Handler();	//TODO: Tu pewnie będzie taki sam problem jak w addKeyTest
 }
-
 
 
 void makeKeyFrame(uint8_t *keyFrame, uint8_t keyIndex, uint8_t keyLength, uint8_t *key, uint8_t nameLength, uint8_t *name, bool overwirteFlag, uint8_t crc) {
@@ -169,10 +172,14 @@ void makeKeyFrame(uint8_t *keyFrame, uint8_t keyIndex, uint8_t keyLength, uint8_
 	}
 }
 
+//********************************************************************************************
+// TEST
+//********************************************************************************************
 void resetMemoryTest() {
 	uint8_t foo = 0xA1;
 	if(eeprom_write(FIRST_MEMORY_ADDR, &foo, sizeof(foo)) != HAL_OK) Error_Handler();
 }
+
 
 void addKeyTest() {
 	writeGeneralDataInMemory(0x05, 0x01, 0x06);
