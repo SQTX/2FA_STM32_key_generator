@@ -25,9 +25,9 @@ uint8_t initClockRTC(RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr) {
 		getTimeFromUser(rtcTimePtr, rtcDatePtr);
 		return 1;
 	}
-	printf("RTC\t[OK]\n");
-	printf("Your local time: [%02d-%02d-%04d, %02d:%02d:%02d]\n", rtcDatePtr->Date, rtcDatePtr->Month, rtcDatePtr->Year + 2000,
-			rtcTimePtr->Hours + TIMEZONE, rtcTimePtr->Minutes, rtcTimePtr->Seconds);
+	printf("RTC status\t\t\t[OK]\n");
+//	printf("Your local time: [%02d-%02d-%04d, %02d:%02d:%02d]\n", rtcDatePtr->Date, rtcDatePtr->Month, rtcDatePtr->Year + 2000,
+//			rtcTimePtr->Hours + TIMEZONE, rtcTimePtr->Minutes, rtcTimePtr->Seconds);
 	return 0;
 }
 
@@ -51,6 +51,11 @@ uint32_t getTimeStamp(RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr) 
 	return (uint32_t)utcTimestamp;
 }
 
+
+void printLocalTime(RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr) {
+	printf("Local time:\t\t\t[%02d-%02d-%04d, %02d:%02d:%02d]\n", rtcDatePtr->Date, rtcDatePtr->Month, rtcDatePtr->Year + 2000,
+				rtcTimePtr->Hours + TIMEZONE, rtcTimePtr->Minutes, rtcTimePtr->Seconds);
+}
 
 //********************************************************************************************
 // PRIVATE

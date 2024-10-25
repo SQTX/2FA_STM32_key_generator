@@ -60,4 +60,24 @@ uint8_t initClockRTC(RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr);
  */
 uint32_t getTimeStamp(RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr);
 
+
+/**
+ * @brief Prints the local date and time, adjusted for the specified time zone.
+ *
+ * This function formats and prints the date and time stored in the provided RTC structures.
+ * It applies a time zone adjustment to the hours, based on the @p TIMEZONE constant, and
+ * displays the result in the format "DD-MM-YYYY, hh:mm:ss".
+ *
+ * @param[in] rtcTimePtr  Pointer to an @p RTC_TimeTypeDef structure containing the current time.
+ * @param[in] rtcDatePtr  Pointer to an @p RTC_DateTypeDef structure containing the current date.
+ *
+ * @note This function assumes that both @p rtcTimePtr and @p rtcDatePtr are properly initialized and
+ *       populated with valid date and time information. The time zone adjustment is applied only to the hours field.
+ *
+ * @warning Ensure that both pointers, @p rtcTimePtr and @p rtcDatePtr, are valid and point to structures
+ *          containing accurate time data before calling this function.
+ */
+void printLocalTime(RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr);
+
+
 #endif /* INC_CLOCKCONTROL_H_ */
