@@ -30,11 +30,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <stdbool.h>
 //My:
 #include "clockControl.h"
 #include "dataConverter.h"
 #include "keyGenerator.h"
 #include "dataFromUser.h"
+#include "eeprom.h"
+#include "memoryController.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -72,14 +75,29 @@ typedef struct tm DateTime_t;
 //CONSTS
 //********************************************************************************************
 //const char encoded[] = {"JV4UYZLHN5CG633S"};	// Encoded key is a word
-const char encodedKey[] = {"JBSWY3DPEHPK3PXP"};	// Encoded key isn't a word
+//const char encodedKey[] = {"JBSWY3DPEHPK3PXP"};	// Encoded key isn't a word
 
 
 //********************************************************************************************
 //GLOBAL VARIABLES (RAM)
 //********************************************************************************************
-RTC_TimeTypeDef rtcTime = {0};
-RTC_DateTypeDef rtcDate = {0};
+//RTC_TimeTypeDef rtcTime = {0};
+//RTC_DateTypeDef rtcDate = {0};
+
+
+//********************************************************************************************
+//Key functions:
+//********************************************************************************************
+uint8_t trimZeros(uint8_t* arr, uint8_t length) {
+	uint8_t new_length = length;
+
+    // Iteruj od końca, aż napotkasz niezerowy element
+    while (new_length > 0 && arr[new_length - 1] == 0) {
+        new_length--; // Zmniejsz nową długość tablicy
+    }
+
+    return new_length; // Zwróć nową długość bez końcowych zer
+}
 
 
 //********************************************************************************************
@@ -156,6 +174,86 @@ int main(void)
   MX_RTC_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
+  printf("-----------------------------------------------------------\n");
+//  ********************************************************************************************
+//  Initializing the Memory
+//  ********************************************************************************************
+//  resetMemoryTest();		// TEST FUNCTION
+//  addKeyTest();			// TEST FUNCTION
+
+  if(checkMemory()){
+	  printf("Memory status\t\t\t[OK]\n");
+  } else {
+	  printf("Memory status\t\t\t[WRONG]\n");
+	  printf("Memory initializing...\n");
+	  if(initMemory(128)){
+		  printf("Memory initialize\t\t[OK]\n");
+//		  TODO: ADD NEW, first KEY
+	  } else {
+		  printf("Memory initialize\t\t[ERROR]\n");
+	  }
+  }
+
+//  ********************************************************************************************
+//  Get general data from memory
+//  ********************************************************************************************
+  uint8_t generalData[6] = {0};
+  readGeneralDataFromMemory(generalData);
+
+  const uint8_t MAX_KEYS = generalData[2];
+  uint8_t keysNumber = generalData[3];
+  uint8_t currentKeyAddr = generalData[4];
+
+  printf("-----------------------------------------------------------\n");
+  printf("General data: \n");
+  printf("Init: %x\n", generalData[0]);
+  printf("Last ADDR: %x\n", generalData[1]);
+  printf("MaxKey: %u\n", generalData[2]);
+  printf("KeysNum: %u\n", generalData[3]);
+  printf("CurrAddr: %u\n", generalData[4]);
+  printf("Free: %x\n", generalData[5]);
+
+
+//  ********************************************************************************************
+//  Get default/last used key from memory
+//  ********************************************************************************************
+  uint8_t currentKey[13] = {0};		// Container for key from memory
+  uint8_t currentKeyName[5] = {0};	// Container for name from memory
+  uint8_t data[13+5] = {0};			// Container for all data from memory
+
+  readKeyFromMemory(data, keysNumber, currentKeyAddr, NULL);
+
+
+  for(int i = 0; i < 13; i++) currentKey[i] = data[i];			//  Get key from data
+  for(int i = 0; i < 5; i++) currentKeyName[i] = data[i+13];	//  Get name from data
+
+
+//  Trim zeros and optimization arrays:
+  uint8_t keySize = {0};
+  uint8_t nameSize = {0};
+  keySize = trimZeros(currentKey, 13);
+  nameSize = trimZeros(currentKeyName, 5);
+
+//  Dynamic allocated key array:
+  uint8_t* key = (uint8_t*) malloc( keySize * sizeof(uint8_t) );
+  for(int i = 0; i < keySize; i++) {
+	  key[i] = currentKey[i];
+  }
+//  Dynamic allocated name array:
+  char* name = (char*) malloc( (nameSize+1) * sizeof(char) );
+  for(int i = 0; i < nameSize; i++) {
+	  name[i] = (char)currentKeyName[i];
+  }
+  name[nameSize] = '\0';
+
+
+  printf("Current used key: %s\n", name);	// Print current used key
+  printf("Key: ");
+  for(int i = 0; i < 13; i++) printf("%x ", currentKey[i]);
+  printf("\n");
+
+
+  /*
 //  ********************************************************************************************
 //  Initializing the RTC clock
 //  ********************************************************************************************
@@ -182,44 +280,46 @@ int main(void)
 	    printf("0x%x ", key[i]);
 	}
 	printf("\n");
-//  ********************************************************************************************
+
+*/
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  printf("-----------------------------------------------------------\n");
+//  printf("-----------------------------------------------------------\n");
 
   while (1)
   {
-//	  ********************************************************************************************
-//	  Generate TOTP TOKEN
-//	  ********************************************************************************************
-//	  TODO: Use an interrupt
-	  uint32_t token = {generateToken(key, keySize, getTimeStamp(&rtcTime, &rtcDate))};	// Generate TOTP token
-	  printf("Code:\t\t%06lu\n", token);
-
-
-	  HAL_RTC_GetDate(&hrtc, &rtcDate, RTC_FORMAT_BIN);
-	  HAL_RTC_GetTime(&hrtc, &rtcTime, RTC_FORMAT_BIN);
-	  uint8_t nowSeconds = rtcTime.Seconds;
-	  uint8_t secToRegenerate = {0};
-
-	  if (nowSeconds < 30) {
-		  secToRegenerate = 30 - nowSeconds;
-	  } else if (nowSeconds > 30 && nowSeconds < 60) {
-		  secToRegenerate = 60 - nowSeconds;
-	  } else {
-		  secToRegenerate = 30;
-	  }
-
-	  HAL_Delay(secToRegenerate*1000);	// New token in 0' and 30' second
-//	  HAL_Delay(30000);					// New token every 30sec
-//	  ********************************************************************************************
+////	  ********************************************************************************************
+////	  Generate TOTP TOKEN
+////	  ********************************************************************************************
+////	  TODO: Use an interrupt
+//	  uint32_t token = {generateToken(key, keySize, getTimeStamp(&rtcTime, &rtcDate))};	// Generate TOTP token
+//	  printf("Code:\t\t%06lu\n", token);
+//
+//
+//	  HAL_RTC_GetDate(&hrtc, &rtcDate, RTC_FORMAT_BIN);
+//	  HAL_RTC_GetTime(&hrtc, &rtcTime, RTC_FORMAT_BIN);
+//	  uint8_t nowSeconds = rtcTime.Seconds;
+//	  uint8_t secToRegenerate = {0};
+//
+//	  if (nowSeconds < 30) {
+//		  secToRegenerate = 30 - nowSeconds;
+//	  } else if (nowSeconds > 30 && nowSeconds < 60) {
+//		  secToRegenerate = 60 - nowSeconds;
+//	  } else {
+//		  secToRegenerate = 30;
+//	  }
+//
+//	  HAL_Delay(secToRegenerate*1000);	// New token in 0' and 30' second
+////	  HAL_Delay(30000);					// New token every 30sec
+////	  ********************************************************************************************
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
   }
   free(key);
+  free(name);
   /* USER CODE END 3 */
 }
 
