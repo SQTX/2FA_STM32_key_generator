@@ -127,7 +127,7 @@ int8_t addNewKey(const uint8_t MAX_KEYS, uint8_t* keysNumber, uint8_t* generalFl
 }
 
 
-int8_t searchKey(uint8_t* keysNumber) {
+int8_t searchKey(uint8_t keysNumber) {
 //	--------------------------------------------------
 //	Get key's name from user:
 //	--------------------------------------------------
@@ -145,35 +145,99 @@ int8_t searchKey(uint8_t* keysNumber) {
 	uint8_t currentKeyName[5] = {0};	// Container for name from memory
 	uint8_t data[13+5] = {0};			// Container for all data from memory
 
-	int8_t status = readKeyFromMemory(data, *keysNumber, NOT_USE_ADDR, name, &wantedAddr);
+	int8_t status = readKeyFromMemory(data, keysNumber, NOT_USE_ADDR, name, &wantedAddr);
 
 	if(status == 0) {
 		for(int i = 0; i < 13; i++) currentKey[i] = data[i];			//  Get key from data
 		for(int i = 0; i < 5; i++) currentKeyName[i] = data[i+13];	//  Get name from data
 
-		printf("Odnaleziona nazwa: %s\n", currentKeyName);
-		printf("Odnaleziony klucz: ");
+		printf("--------------------------\n");
+		printf("THE KEY HAS BEEN FOUND!\n");
+		printf("--------------------------\n");
+		printf("Name:\t\t%s\n", currentKeyName);
+		printf("Key:\t\t");
 		for (int i = 0; i < 10; i++) {
 			printf("0x%x ", currentKey[i]);
 		}
 		printf("\n");
-		printf("Odnaleziony adres klucza: 0x%x\n", wantedAddr);
+		printf("Address:\t0x%x\n", wantedAddr);
+		printf("--------------------------\n");
 
 		return 0;
 	} else if(status == 1) {
-		printf("Podana nazwa nie istnieje w bazie kluczy\n");
+		printf("[INFO]\tThe entered name does not exist in the key database\n");
 		return 1;
 	} else {
-		printf("Something wrong\n");
+		printf("[ERROR]\tSomething wrong\n");
 		return -1;
 	}
 }
 
 
-//int8_t changeActiveKey() {}
+int8_t deleteKey(uint8_t* keysNumber) {
+	//	--------------------------------------------------
+	//	Get key's name from user:
+	//	--------------------------------------------------
+		char name[MAX_KEYS_NAME_SIZE+1] = {0};
+		getKeysNameFromUser(name, PRINT_ENTRED_STRINGS);
 
 
-//int8_t invalidateKey() {}
+	//	--------------------------------------------------
+	//	Search key addr:
+	//	--------------------------------------------------
+		const uint8_t NOT_USE_ADDR = 0x00;
+		uint8_t wantedAddr = 0x00;
+
+		uint8_t data[13+5] = {0};			// Container for all data from memory
+
+		int8_t status = readKeyFromMemory(data, *keysNumber, NOT_USE_ADDR, name, &wantedAddr);
+
+	//	--------------------------------------------------
+	//	Set OW flag and change value of keys:
+	//	--------------------------------------------------
+		if(status == 0) {
+			setOWFlag(wantedAddr);
+			printf("[INFO] Podany klucz zostal usuniety\n");
+			(*keysNumber) -= 1;
+			return 0;
+		} else if(status == 1) {
+			printf("Podana nazwa nie istnieje w bazie kluczy\n");
+			return 1;
+		} else {
+			printf("Something wrong\n");
+			return -1;
+		}
+}
+
+
+void showKeysList(uint8_t keysNumber) {
+	fflush(stdout);
+
+    // Tworzymy dynamiczną tablicę wskaźników na stringi
+    char** wordsArray = malloc(keysNumber * sizeof(char*));
+    if (wordsArray == NULL) {
+        fprintf(stderr, "Błąd alokacji pamięci!\n");
+        return;
+    }
+
+    // Przypisujemy słowa do tablicy
+    getAllNames(wordsArray, keysNumber);
+
+    // Wyświetlamy słowa
+    printf("Keys number: %u\n", keysNumber);
+    printf("Keys list:\n");
+    for (int i = 0; i < keysNumber; i++) {
+        printf("- %s\n", wordsArray[i]);
+    }
+
+    // Zwalniamy pamięć
+    for (int i = 0; i < keysNumber; i++) {
+        free(wordsArray[i]); // Zwalniamy pamięć zajmowaną przez stringi
+    }
+    free(wordsArray); // Zwalniamy pamięć zajmowaną przez tablicę wskaźników
+    fflush(stdout);
+}
+
 
 //********************************************************************************************
 // PRIVATE

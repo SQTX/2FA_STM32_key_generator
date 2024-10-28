@@ -130,6 +130,8 @@ void makeKeyFrame(uint8_t *keyFrame, uint8_t keyIndex, uint8_t keyLength, uint8_
 
 uint8_t findSpaceForKey(const uint8_t MAX_KEYS, const uint8_t KEYS_NUMBER, const uint8_t GENERAL_FLAGS);
 
+void getAllNames(char** namesArray, uint8_t keysNumber);
+
 void getAllOWFlagArr(bool* owFlagArray, const uint8_t MAX_KEYS);
 
 

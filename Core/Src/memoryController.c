@@ -75,13 +75,9 @@ uint8_t readKeyFromMemory(uint8_t *data, uint8_t keysNumber, uint8_t keyAddr, ch
 
 		return 0;
 	} else if(searchName != NULL) {
-		printf("Poszukiwana nazwa: %s\n", searchName);
-
 		*wantedAddr = 0x00;
 		uint8_t currentKeyAddr = FIRST_KEY_ADDR;
 
-
-		printf("Chuj w dupie chlupie: %u\n", keysNumber);
 		for(uint8_t keyIndex = 0; keyIndex < keysNumber; keyIndex++) {
 //			Check key's overwrite flag:
 			uint8_t keyOWFlag = {0};
@@ -99,7 +95,7 @@ uint8_t readKeyFromMemory(uint8_t *data, uint8_t keysNumber, uint8_t keyAddr, ch
 
 //
 			uint8_t wordSize = trimZeros(keyName, KEY_FRAME_NAME_SIZE);
-			printf("Nazwa klucza do sprawdzenia: %s \t %u\n", keyName, wordSize);
+//			printf("Nazwa klucza do sprawdzenia: %s \t %u\n", keyName, wordSize);
 			if(compareArrays(searchName, keyName, wordSize)) {
 //				FOUND KEY!
 				while (eeprom_read(currentKeyAddr+JUMP_TO_KEY_VALUE, key, KEY_FRAME_KEY_SIZE) != HAL_OK) {}
@@ -224,6 +220,45 @@ uint8_t findSpaceForKey(const uint8_t MAX_KEYS, const uint8_t KEYS_NUMBER, const
 }
 
 
+void getAllNames(char** namesArray, uint8_t keysNumber) {
+	const uint8_t JUMP_TO_NAME_VALUE = 15;
+	const uint8_t JUMP_TO_FLAG_VALUE = 20;
+	const uint8_t JUMP_TO_NEXT_KEY = KEY_FRAME_SIZE;
+
+	uint8_t currentKeyAddr = {FIRST_KEY_ADDR};
+
+
+	for(uint8_t keyIndex = 0; keyIndex < keysNumber; keyIndex++) {
+//		Check key's overwrite flag:
+		uint8_t keyOWFlag = {0};
+		while (eeprom_read(currentKeyAddr+JUMP_TO_FLAG_VALUE, &keyOWFlag, 1) != HAL_OK) {}
+
+		if(keyOWFlag == 0x80) {
+//				Skip key if has overwrite flag:
+			currentKeyAddr += JUMP_TO_NEXT_KEY;
+			keyIndex--;
+			continue;
+		}else {
+			uint8_t keyName[KEY_FRAME_NAME_SIZE] = {0x00};
+			while (eeprom_read(currentKeyAddr+JUMP_TO_NAME_VALUE, keyName, KEY_FRAME_NAME_SIZE) != HAL_OK) {}
+
+			uint8_t wordSize = trimZeros(keyName, KEY_FRAME_NAME_SIZE);
+			char* newName = (char*) malloc ( (wordSize+1)*sizeof(char) );
+
+			for(int i = 0; i < wordSize; i++) {
+				newName[i] = keyName[i];
+			}
+			newName[wordSize] = '\0';
+
+			namesArray[keyIndex] = newName;
+
+			currentKeyAddr += JUMP_TO_NEXT_KEY;
+		}
+
+	}
+}
+
+
 void getAllOWFlagArr(bool* owFlagArray, const uint8_t MAX_KEYS) {
 	const uint8_t JUMP_FROM_BEGIN_TO_FLAGS = {(KEY_FRAME_INDEX_SIZE+KEY_FRAME_2SIZE_SIZE+KEY_FRAME_KEY_SIZE+KEY_FRAME_NAME_SIZE)};
 
@@ -276,7 +311,7 @@ void addKeyTest() {
 //********************************************************************************************
 bool compareArrays(const char* array1, const uint8_t* array2, size_t length) {
     for (size_t i = 0; i < length; i++) {
-    	printf("%c (%x) == %c (%x)\n", array1[i], array1[i], array2[i], array2[i]);
+//    	printf("%c (%x) == %c (%x)\n", array1[i], array1[i], array2[i], array2[i]);
         if ((uint8_t)array1[i] != array2[i]) {
             return false;  // Zwróć false, jeśli elementy są różne
         }

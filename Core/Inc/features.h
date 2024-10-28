@@ -27,10 +27,10 @@
 
 int8_t addNewKey(const uint8_t MAX_KEYS, uint8_t* keysNumber, uint8_t* generalFlags);
 
-int8_t searchKey(uint8_t* keysNumber);
+int8_t searchKey(uint8_t keysNumber);
 
 int8_t deleteKey(uint8_t* keysNumber);
 
-
+void showKeysList(uint8_t keysNumber);
 
 #endif /* INC_FEATURES_H_ */
