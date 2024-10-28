@@ -49,3 +49,4 @@ uint8_t trimZeros(uint8_t* arr, uint8_t length) {
 
     return new_length; // Zwróć nową długość bez końcowych zer
 }
+

@@ -55,4 +55,5 @@ int8_t base32ToHex(const char *encoded, const uint8_t encodedLength, uint8_t **d
  */
 uint8_t trimZeros(uint8_t* arr, uint8_t length);
 
+
 #endif /* INC_DATACONVERTER_H_ */
