@@ -133,6 +133,9 @@ uint8_t findSpaceForKey(const uint8_t MAX_KEYS, const uint8_t KEYS_NUMBER, const
 void getAllOWFlagArr(bool* owFlagArray, const uint8_t MAX_KEYS);
 
 
+void setOWFlag(const uint8_t ADDR);
+
+
 void resetMemoryTest();
 void addKeyTest();
 

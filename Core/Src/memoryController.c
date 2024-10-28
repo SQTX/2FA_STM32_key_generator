@@ -241,6 +241,19 @@ void getAllOWFlagArr(bool* owFlagArray, const uint8_t MAX_KEYS) {
 }
 
 
+void setOWFlag(const uint8_t ADDR) {
+	const uint8_t JUMP_TO_FLAG_VALUE = 20;
+	uint8_t flagsByte = {0x00};
+
+//	Get flag byte:
+	while (eeprom_read(ADDR+JUMP_TO_FLAG_VALUE, &flagsByte, 1) != HAL_OK) {}
+
+//	Set bit in byte:
+	flagsByte |= OVERWRITE_FLAG;
+	if(eeprom_write(ADDR+JUMP_TO_FLAG_VALUE, &flagsByte, 1) != HAL_OK) Error_Handler();
+}
+
+
 //********************************************************************************************
 // TEST
 //********************************************************************************************

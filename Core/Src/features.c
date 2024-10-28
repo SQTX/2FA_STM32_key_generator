@@ -139,12 +139,13 @@ int8_t searchKey(uint8_t* keysNumber) {
 //	Searching:
 //	--------------------------------------------------
 	const uint8_t NOT_USE_ADDR = 0x00;
+	uint8_t wantedAddr = 0x00;
 
 	uint8_t currentKey[13] = {0};		// Container for key from memory
 	uint8_t currentKeyName[5] = {0};	// Container for name from memory
 	uint8_t data[13+5] = {0};			// Container for all data from memory
 
-	int8_t status = readKeyFromMemory(data, keysNumber, NOT_USE_ADDR, name);
+	int8_t status = readKeyFromMemory(data, *keysNumber, NOT_USE_ADDR, name, &wantedAddr);
 
 	if(status == 0) {
 		for(int i = 0; i < 13; i++) currentKey[i] = data[i];			//  Get key from data
@@ -156,6 +157,8 @@ int8_t searchKey(uint8_t* keysNumber) {
 			printf("0x%x ", currentKey[i]);
 		}
 		printf("\n");
+		printf("Odnaleziony adres klucza: 0x%x\n", wantedAddr);
+
 		return 0;
 	} else if(status == 1) {
 		printf("Podana nazwa nie istnieje w bazie kluczy\n");
