@@ -51,7 +51,7 @@ void readGeneralDataFromMemory(uint8_t *generalData) {
 }
 
 
-uint8_t readKeyFromMemory(uint8_t *data, uint8_t keysNumber, uint8_t keyAddr, char *searchName) {
+uint8_t readKeyFromMemory(uint8_t *data, uint8_t keysNumber, uint8_t keyAddr, char *searchName, uint8_t* wantedAddr) {
 	const uint8_t JUMP_TO_KEY_VALUE = 2;
 	const uint8_t JUMP_TO_NAME_VALUE = 15;
 	const uint8_t JUMP_TO_FLAG_VALUE = 20;
@@ -77,8 +77,11 @@ uint8_t readKeyFromMemory(uint8_t *data, uint8_t keysNumber, uint8_t keyAddr, ch
 	} else if(searchName != NULL) {
 		printf("Poszukiwana nazwa: %s\n", searchName);
 
+		*wantedAddr = 0x00;
 		uint8_t currentKeyAddr = FIRST_KEY_ADDR;
 
+
+		printf("Chuj w dupie chlupie: %u\n", keysNumber);
 		for(uint8_t keyIndex = 0; keyIndex < keysNumber; keyIndex++) {
 //			Check key's overwrite flag:
 			uint8_t keyOWFlag = {0};
@@ -108,6 +111,7 @@ uint8_t readKeyFromMemory(uint8_t *data, uint8_t keysNumber, uint8_t keyAddr, ch
 					data[i+13] = keyName[i];
 				}
 
+				*wantedAddr = currentKeyAddr;	// RETURN ADDR
 				return 0;
 			} else {
 				currentKeyAddr += JUMP_TO_NEXT_KEY;
@@ -115,6 +119,7 @@ uint8_t readKeyFromMemory(uint8_t *data, uint8_t keysNumber, uint8_t keyAddr, ch
 			}
 
 		}
+
 		return 1;
 	} else {
 		return 1;

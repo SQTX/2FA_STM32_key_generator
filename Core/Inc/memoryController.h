@@ -114,32 +114,8 @@ bool initMemory(uint32_t memorySizeBytes);
  */
 void readGeneralDataFromMemory(uint8_t *generalData);
 
-/**
- * @brief Reads a specific key or searches for a key by name in EEPROM memory.
- *
- * This function retrieves a key and its associated name from EEPROM memory, either from a given
- * address or by searching through all keys if a name is provided. The function can handle cases
- * where certain keys are marked with an overwrite flag, which indicates they should be skipped.
- *
- * @param[out] data       Pointer to the buffer where the retrieved key data will be stored.
- *                        The buffer must have sufficient space for both key and name data.
- * @param[in]  keysNumber Total number of keys stored in memory.
- * @param[in]  keyAddr    The address of the key to read. If set to 0, the function searches
- *                        for the key by name instead.
- * @param[in]  searchName Pointer to the name of the key to search for. If @p keyAddr is not 0,
- *                        this parameter is ignored.
- *
- * @return Returns @p 0 on success, or @p 1 if the key is not found or if @p searchName is
- *         @p NULL and @p keyAddr is 0.
- *
- * @note The function skips keys marked with an overwrite flag (0x80) when searching by name.
- *       It uses several constants such as @p KEY_FRAME_KEY_SIZE, @p KEY_FRAME_NAME_SIZE, and
- *       @p KEY_FRAME_SIZE for memory offsets and frame sizes.
- *
- * @warning Ensure that @p data has adequate memory allocated to store both key and name data.
- *          The function will enter a blocking state until all EEPROM read operations succeed.
- */
-uint8_t readKeyFromMemory(uint8_t *data, uint8_t keysNumber, uint8_t keyAddr, char *searchName);
+
+uint8_t readKeyFromMemory(uint8_t *data, uint8_t keysNumber, uint8_t keyAddr, char *searchName, uint8_t* wantedAddr);
 
 
 
