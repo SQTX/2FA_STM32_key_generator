@@ -13,7 +13,8 @@
 #include <time.h>
 
 
-#define DATATIME_MAX_LENGTH	21		// DD-MM-YYYY,hh:mm:ss`\n``\r`
+#define DATATIME_MAX_LENGTH		21		// DD-MM-YYYY,hh:mm:ss`\n``\r`
+#define MAX_STRING_LENGTH		22
 
 typedef struct tm DateTime_t;
 
@@ -40,5 +41,7 @@ typedef struct tm DateTime_t;
  * @warning If the buffer reaches the maximum length, all previously collected data will be discarded.
  */
 uint8_t getDataTimeViaKeyboard(uint8_t value, DateTime_t *DataTime);
+
+int8_t getStringViaKeyboard(uint8_t value, char* stringContainer, uint8_t stringLenght);
 
 #endif /* INC_DATAFROMUSER_H_ */

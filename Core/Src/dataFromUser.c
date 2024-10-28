@@ -8,7 +8,8 @@
 #include "dataFromUser.h"
 
 
-static char line_buffer[DATATIME_MAX_LENGTH + 1];	// Character buffer [limit + '\0']
+static char time_buffer[DATATIME_MAX_LENGTH + 1];	// Character buffer [limit + '\0']
+static char string_buffer[MAX_STRING_LENGTH + 1];	// Character buffer [limit + '\0']
 static uint32_t line_length;						// Number of characters in buffer
 
 
@@ -19,17 +20,17 @@ void splitDateTime(char *, char *, char *);
 //********************************************************************************************
 // PUBLIC
 //********************************************************************************************
-uint8_t getDataTimeViaKeyboard(uint8_t value, DateTime_t *DataTime) {
-	if (value == '\r' || value == '\n') {
+uint8_t getDataTimeViaKeyboard(uint8_t valueChar, DateTime_t *DataTime) {
+	if (valueChar == '\r' || valueChar == '\n') {
 //		End of line:
 		if (line_length > 0) {
-			line_buffer[line_length] = '\0';	// Add NULL char in the end of String
+			time_buffer[line_length] = '\0';	// Add NULL char in the end of String
 
 //			Get data from String:
 		    char date[11];  // Space for: "DD-MM-YYYY"	(10 char + \0)
 		    char time[9];   // Space for: "hh:mm:ss" 	(8 char + \0)
 
-		    splitDateTime(line_buffer, date, time);
+		    splitDateTime(time_buffer, date, time);
 
 //		    printf("Got date: %s\n", date);
 //		    printf("Got time: %s\n", time);
@@ -46,12 +47,39 @@ uint8_t getDataTimeViaKeyboard(uint8_t value, DateTime_t *DataTime) {
 			line_length = 0;
 		}
 //		Get another char and add it to buffer:
-		line_buffer[line_length++] = value;
+		time_buffer[line_length++] = valueChar;
 		return 1;	// Not finished
 	}
 	return 1;		// Not finished
 }
 
+
+int8_t getStringViaKeyboard(uint8_t valueChar, char* stringContainer, uint8_t stringLenght) {
+	if (valueChar == '\r' || valueChar == '\n') {
+//		End of line:
+		if (line_length > 0) {
+			string_buffer[line_length] = '\0';	// Add NULL char in the end of String
+
+			for(int i = 0; i < stringLenght+1; i++) {
+				stringContainer[i] = string_buffer[i];
+			}
+
+			line_length = 0;	// Buffer RESET
+			return 0;			// Success
+		}
+	} else {
+//		If the data exceeds the specified limit, it is deleted
+		if (line_length >= MAX_STRING_LENGTH || line_length >= stringLenght) {
+			printf("[WARNING] The received string of characters exceeds the allowed limit\n");
+			line_length = 0;
+			return -1;			// ERROR
+		}
+//		Get another char and add it to buffer:
+		string_buffer[line_length++] = valueChar;
+		return 1;	// Not finished
+	}
+	return 1;		// Not finished
+}
 
 //********************************************************************************************
 // PRIVATE
