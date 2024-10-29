@@ -38,6 +38,7 @@
 #include "dataFromUser.h"
 #include "eeprom.h"
 #include "memoryController.h"
+#include "features.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -81,6 +82,9 @@ typedef struct tm DateTime_t;
 //********************************************************************************************
 //GLOBAL VARIABLES (RAM)
 //********************************************************************************************
+const bool ACTIVE_MODE = false;		// PASSIVE_MODE - the device itself generates a token every 0 and 30 seconds
+//const bool ACTIVE_MODE = true;		// ACTIVE_MODE  - the device generates a token only when the button is pressed
+
 RTC_TimeTypeDef rtcTime = {0};
 RTC_DateTypeDef rtcDate = {0};
 
@@ -186,6 +190,9 @@ int main(void)
 	  }
   }
 
+//  addKeyTest();
+
+
 //  ********************************************************************************************
 //  Initializing the RTC clock
 //  ********************************************************************************************
@@ -201,10 +208,14 @@ int main(void)
   const uint8_t MAX_KEYS = generalData[2];
   uint8_t keysNumber = generalData[3];
   uint8_t currentKeyAddr = generalData[4];
+  uint8_t generalFlags = generalData[5];
 
   printf("-----------------------------------------------------------\n");
   printf("General information: \n");
   printf("-----------------------------------------------------------\n");
+  printf("The device works in the mode:\t[");
+  ACTIVE_MODE ? printf("ACTIVE") : printf("PASSIVE");
+  printf("]\n");
   printLocalTime(&rtcTime, &rtcDate);
   printf("Epoch TimeStamp:\t\t[%ld]\n", getTimeStamp(&rtcTime, &rtcDate));	// Show current epoch TimeStamp
   printf("Maximum keys in memory:\t\t[%u]\n", MAX_KEYS);
@@ -218,7 +229,7 @@ int main(void)
   uint8_t currentKeyName[5] = {0};	// Container for name from memory
   uint8_t data[13+5] = {0};			// Container for all data from memory
 
-  readKeyFromMemory(data, keysNumber, currentKeyAddr, NULL);
+  readKeyFromMemory(data, keysNumber, currentKeyAddr, NULL, &currentKeyAddr);
 
 
   for(int i = 0; i < 13; i++) currentKey[i] = data[i];			//  Get key from data
@@ -249,9 +260,9 @@ int main(void)
 
   printf("===========================================================\n");
 
-  /*
+/*
 //  ********************************************************************************************
-//  Conversion Encoded key to normal key
+//  Conversion Encoded key to normal key (HARD_CODE ENCODED KEY - NOT USE WITH MEMORY)
 //  ********************************************************************************************
 	uint8_t encodedLength = {(sizeof encodedKey)-1};					// Encoded key length (without '\n')
 	printf("Code: %s\t| Size: %u\n", encodedKey, encodedLength);
@@ -270,37 +281,101 @@ int main(void)
 	}
 	printf("\n");
 */
+
+//  const uint8_t MAX_KEYS = 5;
+//  uint8_t keysNumber = 2;
+//  uint8_t currentKeyAddr = 0x1c;
+//  uint8_t generalFlags = 0x00;
+
+
+//  searchKey(keysNumber);
+////
+//  searchKey(keysNumber);
+////
+//  addNewKey(MAX_KEYS, &keysNumber, &generalFlags);
+
+
+//  uint8_t currentKey[13] = {0};		// Container for key from memory
+//  uint8_t currentKeyName[5] = {0};	// Container for name from memory
+//  uint8_t data[13+5] = {0};			// Container for all data from memory
+//
+//  readKeyFromMemory(data, keysNumber, currentKeyAddr, NULL, currentKeyAddr);
+//
+//
+//  for(int i = 0; i < 13; i++) currentKey[i] = data[i];			//  Get key from data
+//  for(int i = 0; i < 5; i++) currentKeyName[i] = data[i+13];	//  Get name from data
+//
+//
+//	printf("1.Dekodowany tekst: ");
+//	for (int i = 0; i < 10; i++) {
+////		printf("%c", key[i]);
+//	    printf("0x%x ", currentKey[i]);
+//	}
+//	printf("\n");
+//  printf("1.NewName: %s\n", currentKeyName);
+
+
+//  currentKeyAddr = 0x06;
+//
+//  uint8_t currentKey2[13] = {0};		// Container for key from memory
+//  uint8_t currentKeyName2[5] = {0};	// Container for name from memory
+//  uint8_t data2[13+5] = {0};			// Container for all data from memory
+//
+//  readKeyFromMemory(data2, keysNumber, currentKeyAddr, NULL, currentKeyAddr);
+//
+//
+//  for(int i = 0; i < 13; i++) currentKey2[i] = data2[i];			//  Get key from data
+//  for(int i = 0; i < 5; i++) currentKeyName2[i] = data2[i+13];	//  Get name from data
+//
+//	printf("2.Dekodowany tekst: ");
+//	for (int i = 0; i < 10; i++) {
+////		printf("%c", key[i]);
+//	    printf("0x%x ", currentKey2[i]);
+//	}
+//	printf("\n");
+//  printf("2.NewName: %s\n", currentKeyName2);
+
+
+
+
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 //  printf("-----------------------------------------------------------\n");
+//  showKeysList(keysNumber);
+
 
   while (1)
   {
+//	  searchKey(keysNumber);
 //	  ********************************************************************************************
-//	  Generate TOTP TOKEN
+//	  Generate TOTP TOKEN in PASSIVE_MODE
 //	  ********************************************************************************************
-//	  TODO: Use an interrupt
-	  uint32_t token = {generateToken(key, keySize, getTimeStamp(&rtcTime, &rtcDate))};	// Generate TOTP token
-	  printf("Token:\t\t[%06lu]\n", token);
+	  if(!ACTIVE_MODE) {
+		  uint32_t token = {generateToken(key, keySize, getTimeStamp(&rtcTime, &rtcDate))};	// Generate TOTP token
+		  printf("Token:\t\t[%06lu]\n", token);
 
 
-	  HAL_RTC_GetDate(&hrtc, &rtcDate, RTC_FORMAT_BIN);
-	  HAL_RTC_GetTime(&hrtc, &rtcTime, RTC_FORMAT_BIN);
-	  uint8_t nowSeconds = rtcTime.Seconds;
-	  uint8_t secToRegenerate = {0};
+		  HAL_RTC_GetDate(&hrtc, &rtcDate, RTC_FORMAT_BIN);
+		  HAL_RTC_GetTime(&hrtc, &rtcTime, RTC_FORMAT_BIN);
+		  uint8_t nowSeconds = rtcTime.Seconds;
+		  uint8_t secToRegenerate = {0};
 
-	  if (nowSeconds < 30) {
-		  secToRegenerate = 30 - nowSeconds;
-	  } else if (nowSeconds > 30 && nowSeconds < 60) {
-		  secToRegenerate = 60 - nowSeconds;
-	  } else {
-		  secToRegenerate = 30;
+		  if (nowSeconds < 30) {
+			  secToRegenerate = 30 - nowSeconds;
+		  } else if (nowSeconds > 30 && nowSeconds < 60) {
+			  secToRegenerate = 60 - nowSeconds;
+		  } else {
+			  secToRegenerate = 30;
+		  }
+
+		  HAL_Delay(secToRegenerate*1000);	// New token in 0' and 30' second
+	//	  HAL_Delay(30000);					// New token every 30sec
 	  }
 
-	  HAL_Delay(secToRegenerate*1000);	// New token in 0' and 30' second
-//	  HAL_Delay(30000);					// New token every 30sec
 //	  ********************************************************************************************
     /* USER CODE END WHILE */
 
@@ -366,7 +441,21 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+  if (GPIO_Pin == USER_BTN1_Pin) {
+//	  ********************************************************************************************
+//	  Generate TOTP TOKEN in ACTIVE_MODE
+//	  ********************************************************************************************
+	  if(ACTIVE_MODE) {
+		  uint32_t token = {generateToken(key, keySize, getTimeStamp(&rtcTime, &rtcDate))};	// Generate TOTP token
+		  printf("Token:\t\t[%06lu]\n", token);
+	  }
 
+
+
+//	  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+  }
+}
 /* USER CODE END 4 */
 
 /**
