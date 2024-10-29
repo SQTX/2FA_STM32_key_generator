@@ -85,6 +85,12 @@ typedef struct tm DateTime_t;
 const bool ACTIVE_MODE = false;		// PASSIVE_MODE - the device itself generates a token every 0 and 30 seconds
 //const bool ACTIVE_MODE = true;		// ACTIVE_MODE  - the device generates a token only when the button is pressed
 
+//TODO: Tryby pracy przyciskow:
+//0: [NORMAL] 		OK - generate token (in ACTIVE_MODE) | UP - choose function | DOWN - settings
+//1: [CHOOSE_MODE] 	OK - okey button | UP - move up | DOWN - move up
+//uint8_t btnMode = 0x00;
+
+
 RTC_TimeTypeDef rtcTime = {0};
 RTC_DateTypeDef rtcDate = {0};
 
@@ -442,7 +448,7 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-  if (GPIO_Pin == USER_BTN1_Pin) {
+  if(GPIO_Pin == USER_BTN1_Pin) {
 //	  ********************************************************************************************
 //	  Generate TOTP TOKEN in ACTIVE_MODE
 //	  ********************************************************************************************
@@ -454,6 +460,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 
 
 //	  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+  }
+
+
+  if(GPIO_Pin == USER_BTN_UP_Pin) {
+	  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+  }else if(USER_BTN_DOWN_Pin) {
+	  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
   }
 }
 /* USER CODE END 4 */
