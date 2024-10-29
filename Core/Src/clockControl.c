@@ -8,7 +8,8 @@
 
 
 // TODO: Hardcode time zone
-const int8_t TIMEZONE = {2};	// Poland: UTC+2h (local_time_hour - 2h)
+//const int8_t TIMEZONE = {2};	// Poland: UTC+2h (local_summer_time_hour - 2h)
+const int8_t TIMEZONE = {1};	// Poland: UTC+1h (local_winter_time_hour - 1h)
 
 
 void getTimeFromUser(RTC_TimeTypeDef *, RTC_DateTypeDef *);
@@ -20,7 +21,7 @@ uint8_t initClockRTC(RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr) {
 	HAL_RTC_GetTime(&hrtc, rtcTimePtr, RTC_FORMAT_BIN);
 	HAL_RTC_GetDate(&hrtc, rtcDatePtr, RTC_FORMAT_BIN);
 
-	if(rtcDatePtr->Year == 0 && rtcTimePtr->Hours == 0) {
+	if(rtcDatePtr->Year <= 0 && rtcTimePtr->Hours <= 0) {
 		printf("RTC\t[not configured]\n");
 		getTimeFromUser(rtcTimePtr, rtcDatePtr);
 		return 1;
