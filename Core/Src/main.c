@@ -39,6 +39,7 @@
 #include "eeprom.h"
 #include "memoryController.h"
 #include "features.h"
+#include "interface.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -84,6 +85,9 @@ typedef struct tm DateTime_t;
 //********************************************************************************************
 const bool ACTIVE_MODE = false;		// PASSIVE_MODE - the device itself generates a token every 0 and 30 seconds
 //const bool ACTIVE_MODE = true;		// ACTIVE_MODE  - the device generates a token only when the button is pressed
+
+volatile bool OPT_MODE = true;
+//bool OPT_MODE = false;		//
 
 //TODO: Tryby pracy przyciskow:
 //0: [NORMAL] 		OK - generate token (in ACTIVE_MODE) | UP - choose function | DOWN - settings
@@ -356,11 +360,80 @@ int main(void)
 
   while (1)
   {
-//	  searchKey(keysNumber);
+//	  ********************************************************************************************
+//	  Option mode
+//	  ********************************************************************************************
+	  if(OPT_MODE) {
+		  bool repeat = false;
+
+
+		  do{
+			  repeat = false;
+			  uint8_t option = printOptions();
+
+			  		  if(option != 0) {
+			  			  switch(option) {
+			  			  case 1:
+			  				  printf("KEYS LIST\n");
+			  //				  showKeysList(keysNumber);
+			  				  break;
+			  			  case 2:
+			  				  printf("SET KEY\n");
+			  //				  searchKey(keysNumber);
+			  				  break;
+			  			  case 3:
+			  				  printf("ADD KEY\n");
+			  //				  addNewKey(MAX_KEYS, &keysNumber, &generalFlags);
+			  				  break;
+			  			  case 4:
+			  				  printf("DELETE KEY\n");
+			  //				  deleteKey(&keysNumber);
+			  				  break;
+			  			  case 5:
+			  				  HAL_Delay(250);
+
+			  				  uint8_t setOption = printSettings();
+
+			  				  if(setOption != 0) {
+			  					  switch(setOption) {
+			  					  	  case 1:
+			  					  		  printf("SET MODE\n");
+			  //					  		  showKeysList(keysNumber);
+			  					  		  break;
+			  					  	  case 2:
+			  					  		  printf("SET TIME\n");
+			  //					  		  searchKey(keysNumber);
+			  					  		  break;
+			  					  	  case 3:
+			  					  		  printf("SET TIMEZONE\n");
+			  //					  		  addNewKey(MAX_KEYS, &keysNumber, &generalFlags);
+			  					  		  break;
+			  					  	  case 4:
+			  					  		  printf("SET BACK\n");
+			  					  		  repeat = true;
+			  					  		  break;
+			  					  	  default:
+			  					  		  break;
+			  					  }
+			  				  }
+			  				  break;
+			  			  case 6:
+			  				  break;
+			  			  default:
+			  				  break;
+			  			  }
+			  		  }
+		  }while(repeat);
+
+		  OPT_MODE = false;
+	  }
+
+//	  ********************************************************************************************
+
 //	  ********************************************************************************************
 //	  Generate TOTP TOKEN in PASSIVE_MODE
 //	  ********************************************************************************************
-	  if(!ACTIVE_MODE) {
+	  if(!ACTIVE_MODE && !OPT_MODE) {
 		  uint32_t token = {generateToken(key, keySize, getTimeStamp(&rtcTime, &rtcDate))};	// Generate TOTP token
 		  printf("Token:\t\t[%06lu]\n", token);
 
@@ -462,11 +535,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 //	  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
   }
 
-
-  if(GPIO_Pin == USER_BTN_UP_Pin) {
-	  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-  }else if(USER_BTN_DOWN_Pin) {
-	  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+  if(!OPT_MODE) {
+	  if(GPIO_Pin == USER_BTN_UP_Pin) {
+		  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+	  }else if(USER_BTN_DOWN_Pin) {
+		  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+	  }
   }
 }
 /* USER CODE END 4 */
