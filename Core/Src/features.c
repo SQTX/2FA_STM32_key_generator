@@ -127,7 +127,7 @@ int8_t addNewKey(const uint8_t MAX_KEYS, uint8_t* keysNumber, uint8_t* generalFl
 }
 
 
-int8_t searchKey(uint8_t keysNumber) {
+int8_t searchKey(uint8_t keysNumber, uint8_t* keyAddr) {
 //	--------------------------------------------------
 //	Get key's name from user:
 //	--------------------------------------------------
@@ -162,6 +162,8 @@ int8_t searchKey(uint8_t keysNumber) {
 		printf("\n");
 		printf("Address:\t0x%x\n", wantedAddr);
 		printf("--------------------------\n");
+
+		*keyAddr = wantedAddr;
 
 		return 0;
 	} else if(status == 1) {

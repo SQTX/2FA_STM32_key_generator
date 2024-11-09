@@ -27,7 +27,7 @@
 
 int8_t addNewKey(const uint8_t MAX_KEYS, uint8_t* keysNumber, uint8_t* generalFlags);
 
-int8_t searchKey(uint8_t keysNumber);
+int8_t searchKey(uint8_t keysNumber, uint8_t* keyAddr);
 
 int8_t deleteKey(uint8_t* keysNumber);
 
