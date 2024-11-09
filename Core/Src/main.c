@@ -86,8 +86,8 @@ typedef struct tm DateTime_t;
 const bool ACTIVE_MODE = false;		// PASSIVE_MODE - the device itself generates a token every 0 and 30 seconds
 //const bool ACTIVE_MODE = true;		// ACTIVE_MODE  - the device generates a token only when the button is pressed
 
-volatile bool OPT_MODE = true;
-//bool OPT_MODE = false;		//
+volatile bool OPT_MODE = false;
+//volatile bool OPT_MODE = true;
 
 //TODO: Tryby pracy przyciskow:
 //0: [NORMAL] 		OK - generate token (in ACTIVE_MODE) | UP - choose function | DOWN - settings
@@ -374,12 +374,10 @@ int main(void)
 			  		  if(option != 0) {
 			  			  switch(option) {
 			  			  case 1:
-			  				  printf("KEYS LIST\n");
-			  //				  showKeysList(keysNumber);
+			  				  showKeysList(keysNumber);
 			  				  break;
 			  			  case 2:
-			  				  printf("SET KEY\n");
-			  //				  searchKey(keysNumber);
+			  				  searchKey(keysNumber);
 			  				  break;
 			  			  case 3:
 			  				  printf("ADD KEY\n");
@@ -428,7 +426,6 @@ int main(void)
 		  OPT_MODE = false;
 	  }
 
-//	  ********************************************************************************************
 
 //	  ********************************************************************************************
 //	  Generate TOTP TOKEN in PASSIVE_MODE
@@ -536,11 +533,15 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
   }
 
   if(!OPT_MODE) {
-	  if(GPIO_Pin == USER_BTN_UP_Pin) {
-		  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-	  }else if(USER_BTN_DOWN_Pin) {
-		  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+	  if(GPIO_Pin == USER_BTN_UP_Pin || GPIO_Pin == USER_BTN_DOWN_Pin) {
+		  OPT_MODE = true;
 	  }
+
+//	  if(GPIO_Pin == USER_BTN_UP_Pin) {
+//		  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+//	  }else if(GPIO_Pin == USER_BTN_DOWN_Pin) {
+//		  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+//	  }
   }
 }
 /* USER CODE END 4 */
