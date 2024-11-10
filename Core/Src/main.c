@@ -20,6 +20,7 @@
 #include "main.h"
 #include "crc.h"
 #include "i2c.h"
+#include "iwdg.h"
 #include "rtc.h"
 #include "usart.h"
 #include "gpio.h"
@@ -165,7 +166,10 @@ int main(void)
   MX_CRC_Init();
   MX_RTC_Init();
   MX_I2C1_Init();
+  MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
+  volatile uint32_t prevWatchDogReset = HAL_GetTick();
+
 //  resetMemoryTest();		// TEST FUNCTION
 //  addKeyTest();			// TEST FUNCTION
 
@@ -311,7 +315,7 @@ int main(void)
 
 			do {
 				repeat = false;
-				uint8_t option = printOptions();
+				uint8_t option = printOptions(&prevWatchDogReset);
 
 				if (option != NONE) {
 					switch (option) {
@@ -338,14 +342,14 @@ int main(void)
 						case SETTINGS:
 							HAL_Delay(250);
 
-							uint8_t setOption = printSettings();
+							uint8_t setOption = printSettings(&prevWatchDogReset);
 
 							if (setOption != SET_NONE) {
 								switch (setOption) {
 								case SET_CHANGE_MODE:
 									HAL_Delay(250);
 
-									uint8_t setWorkMode = printWrokingMode();
+									uint8_t setWorkMode = printWrokingMode(&prevWatchDogReset);
 
 									if (setWorkMode != WORK_NONE) {
 										switch(setWorkMode) {
@@ -420,6 +424,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+//		RESSET WATCHDOG IN MAIN LOOP:
+		resetWatchDog(&prevWatchDogReset);
 	}
 	free(key);
 	free(name);
@@ -450,8 +456,10 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSE|RCC_OSCILLATORTYPE_MSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_LSE
+                              |RCC_OSCILLATORTYPE_MSI;
   RCC_OscInitStruct.LSEState = RCC_LSE_ON;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.MSIState = RCC_MSI_ON;
   RCC_OscInitStruct.MSICalibrationValue = 0;
   RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_6;

@@ -29,10 +29,11 @@ void printControlInfo(int);
 //********************************************************************************************
 // PUBLIC
 //********************************************************************************************
-uint8_t printOptions() {
+uint8_t printOptions(volatile uint32_t *prevWatchDogReset) {
 	uint8_t currentOptNum = {0};
 
 	while(1) {
+		resetWatchDog(prevWatchDogReset);
 		clearTerminal();
 		printControlInfo(TYPE_OPTIONS);
 
@@ -43,6 +44,7 @@ uint8_t printOptions() {
 		printf("\n");
 
 		while(1) {
+			resetWatchDog(prevWatchDogReset);
 			HAL_Delay(130);
 
 			if(HAL_GPIO_ReadPin(USER_BTN1_GPIO_Port, USER_BTN1_Pin) == GPIO_PIN_RESET) {
@@ -72,10 +74,11 @@ uint8_t printOptions() {
 }
 
 
-uint8_t printSettings() {
+uint8_t printSettings(volatile uint32_t *prevWatchDogReset) {
 	uint8_t currentSetNum = {0};
 
 	while(1) {
+		resetWatchDog(prevWatchDogReset);
 		HAL_Delay(130);
 
 		clearTerminal();
@@ -88,6 +91,7 @@ uint8_t printSettings() {
 		printf("\n");
 
 		while(1) {
+			resetWatchDog(prevWatchDogReset);
 			if(HAL_GPIO_ReadPin(USER_BTN1_GPIO_Port, USER_BTN1_Pin) == GPIO_PIN_RESET) {
 				if(currentSetNum > 0 && currentSetNum <= SETTINGS_NUMBER) {
 					printf("Selected setting: %u-%s\n", currentSetNum, SettingListPtr[currentSetNum-1]);
@@ -116,10 +120,11 @@ uint8_t printSettings() {
 }
 
 
-uint8_t printWrokingMode() {
+uint8_t printWrokingMode(volatile uint32_t *prevWatchDogReset) {
 	uint8_t currentWorkNum = {0};
 
 	while(1) {
+		resetWatchDog(prevWatchDogReset);
 		HAL_Delay(130);
 
 		clearTerminal();
@@ -132,6 +137,7 @@ uint8_t printWrokingMode() {
 		printf("\n");
 
 		while(1) {
+			resetWatchDog(prevWatchDogReset);
 			if(HAL_GPIO_ReadPin(USER_BTN1_GPIO_Port, USER_BTN1_Pin) == GPIO_PIN_RESET) {
 				if(currentWorkNum > 0 && currentWorkNum <= WORKING_MODE_NUMBER) {
 					printf("Selected working mode: %u-%s\n", currentWorkNum, WorkingModeListPtr[currentWorkNum-1]);
