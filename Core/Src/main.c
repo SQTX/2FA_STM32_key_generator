@@ -74,11 +74,6 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN 0 */
 typedef struct tm DateTime_t;
 
-//********************************************************************************************
-//CONSTS
-//********************************************************************************************
-//const char encoded[] = {"JV4UYZLHN5CG633S"};	// Encoded key is a word
-//const char encodedKey[] = {"JBSWY3DPEHPK3PXP"};	// Encoded key isn't a word
 
 //********************************************************************************************
 //GLOBAL VARIABLES (RAM)
@@ -138,38 +133,39 @@ void searchAndSetKey(const uint8_t keysNumber, uint8_t *currentKeyAddrPtr) {
 /* USER CODE END 0 */
 
 /**
- * @brief  The application entry point.
- * @retval int
- */
-int main(void) {
+  * @brief  The application entry point.
+  * @retval int
+  */
+int main(void)
+{
 
-	/* USER CODE BEGIN 1 */
+  /* USER CODE BEGIN 1 */
 
-	/* USER CODE END 1 */
+  /* USER CODE END 1 */
 
-	/* MCU Configuration--------------------------------------------------------*/
+  /* MCU Configuration--------------------------------------------------------*/
 
-	/* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-	HAL_Init();
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
 
-	/* USER CODE BEGIN Init */
+  /* USER CODE BEGIN Init */
 
-	/* USER CODE END Init */
+  /* USER CODE END Init */
 
-	/* Configure the system clock */
-	SystemClock_Config();
+  /* Configure the system clock */
+  SystemClock_Config();
 
-	/* USER CODE BEGIN SysInit */
+  /* USER CODE BEGIN SysInit */
 
-	/* USER CODE END SysInit */
+  /* USER CODE END SysInit */
 
-	/* Initialize all configured peripherals */
-	MX_GPIO_Init();
-	MX_USART2_UART_Init();
-	MX_CRC_Init();
-	MX_RTC_Init();
-	MX_I2C1_Init();
-	/* USER CODE BEGIN 2 */
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_USART2_UART_Init();
+  MX_CRC_Init();
+  MX_RTC_Init();
+  MX_I2C1_Init();
+  /* USER CODE BEGIN 2 */
 //  resetMemoryTest();		// TEST FUNCTION
 //  addKeyTest();			// TEST FUNCTION
 
@@ -297,12 +293,14 @@ int main(void) {
 //	printf("\n");
 //  printf("2.NewName: %s\n", currentKeyName2);
 
-	/* USER CODE END 2 */
+  /* USER CODE END 2 */
 
-	/* Infinite loop */
-	/* USER CODE BEGIN WHILE */
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
 //  printf("-----------------------------------------------------------\n");
 //  showKeysList(keysNumber);
+	bool tokenWasGenerate = false;
+	uint32_t nextGenerate = 0;
 
 	while (1) {
 //	  ********************************************************************************************
@@ -394,87 +392,92 @@ int main(void) {
 //	  Generate TOTP TOKEN in PASSIVE_MODE
 //	  ********************************************************************************************
 		if (!ACTIVE_MODE && !OPT_MODE) {
-			uint32_t token = { generateToken(key, keySize,
-					getTimeStamp(&rtcTime, &rtcDate)) };// Generate TOTP token
-			printf("Token:\t\t[%06lu]\n", token);
-
 			HAL_RTC_GetDate(&hrtc, &rtcDate, RTC_FORMAT_BIN);
 			HAL_RTC_GetTime(&hrtc, &rtcTime, RTC_FORMAT_BIN);
 			uint8_t nowSeconds = rtcTime.Seconds;
-			uint8_t secToRegenerate = { 0 };
 
-			if (nowSeconds < 30) {
-				secToRegenerate = 30 - nowSeconds;
-			} else if (nowSeconds > 30 && nowSeconds < 60) {
-				secToRegenerate = 60 - nowSeconds;
-			} else {
-				secToRegenerate = 30;
+
+			uint32_t nowTimeStamp = getTimeStamp(&rtcTime, &rtcDate);
+			if( nextGenerate == 0 || (((nowSeconds > 0 && nowSeconds < 30) || (nowSeconds > 30 && nowSeconds < 60)) && !tokenWasGenerate) ) {
+				uint32_t token = { generateToken(key, keySize, getTimeStamp(&rtcTime, &rtcDate)) };// Generate TOTP token
+
+				uint8_t blockFor = 0;
+				if(nowSeconds > 0 && nowSeconds < 30) {
+					blockFor = 30 - nowSeconds;
+				}else if(nowSeconds > 30 && nowSeconds < 60) {
+					blockFor = 60 - nowSeconds;
+				}
+				nextGenerate = nowTimeStamp + blockFor;
+
+				printf("Token:\t\t[%06lu]\n", token);
+
+				tokenWasGenerate = true;
+			}else if(nowTimeStamp >= nextGenerate && tokenWasGenerate) {
+				tokenWasGenerate = false;
 			}
-
-			HAL_Delay(secToRegenerate * 1000);// New token in 0' and 30' second
-			//	  HAL_Delay(30000);					// New token every 30sec
 		}
-
 //	  ********************************************************************************************
-		/* USER CODE END WHILE */
+    /* USER CODE END WHILE */
 
-		/* USER CODE BEGIN 3 */
+    /* USER CODE BEGIN 3 */
 	}
 	free(key);
 	free(name);
-	/* USER CODE END 3 */
+  /* USER CODE END 3 */
 }
 
 /**
- * @brief System Clock Configuration
- * @retval None
- */
-void SystemClock_Config(void) {
-	RCC_OscInitTypeDef RCC_OscInitStruct = { 0 };
-	RCC_ClkInitTypeDef RCC_ClkInitStruct = { 0 };
+  * @brief System Clock Configuration
+  * @retval None
+  */
+void SystemClock_Config(void)
+{
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-	/** Configure the main internal regulator output voltage
-	 */
-	if (HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1)
-			!= HAL_OK) {
-		Error_Handler();
-	}
+  /** Configure the main internal regulator output voltage
+  */
+  if (HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
-	/** Configure LSE Drive Capability
-	 */
-	HAL_PWR_EnableBkUpAccess();
-	__HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
+  /** Configure LSE Drive Capability
+  */
+  HAL_PWR_EnableBkUpAccess();
+  __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
 
-	/** Initializes the RCC Oscillators according to the specified parameters
-	 * in the RCC_OscInitTypeDef structure.
-	 */
-	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSE
-			| RCC_OSCILLATORTYPE_MSI;
-	RCC_OscInitStruct.LSEState = RCC_LSE_ON;
-	RCC_OscInitStruct.MSIState = RCC_MSI_ON;
-	RCC_OscInitStruct.MSICalibrationValue = 0;
-	RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_6;
-	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
-	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
-		Error_Handler();
-	}
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
+  */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSE|RCC_OSCILLATORTYPE_MSI;
+  RCC_OscInitStruct.LSEState = RCC_LSE_ON;
+  RCC_OscInitStruct.MSIState = RCC_MSI_ON;
+  RCC_OscInitStruct.MSICalibrationValue = 0;
+  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_6;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
-	/** Initializes the CPU, AHB and APB buses clocks
-	 */
-	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK
-			| RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
-	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_MSI;
-	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+  /** Initializes the CPU, AHB and APB buses clocks
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_MSI;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK) {
-		Error_Handler();
-	}
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
-	/** Enable MSI Auto calibration
-	 */
-	HAL_RCCEx_EnableMSIPLLMode();
+  /** Enable MSI Auto calibration
+  */
+  HAL_RCCEx_EnableMSIPLLMode();
 }
 
 /* USER CODE BEGIN 4 */
@@ -507,16 +510,17 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 /* USER CODE END 4 */
 
 /**
- * @brief  This function is executed in case of error occurrence.
- * @retval None
- */
-void Error_Handler(void) {
-	/* USER CODE BEGIN Error_Handler_Debug */
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
+void Error_Handler(void)
+{
+  /* USER CODE BEGIN Error_Handler_Debug */
 	/* User can add his own implementation to report the HAL error return state */
 	__disable_irq();
 	while (1) {
 	}
-	/* USER CODE END Error_Handler_Debug */
+  /* USER CODE END Error_Handler_Debug */
 }
 
 #ifdef  USE_FULL_ASSERT
