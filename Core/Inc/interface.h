@@ -35,10 +35,18 @@ typedef enum {
 } SettingOptions;
 
 
+typedef enum {
+	WORK_NONE = 0,
+	WORK_PASSIVE,
+	WORK_ACTIVE
+} WorkingMode;
+
+
 uint8_t printOptions();
 
-
 uint8_t printSettings();
+
+uint8_t printWrokingMode();
 
 
 #endif /* INC_INTERFACE_H_ */

@@ -14,9 +14,13 @@ char *OptionsListPtr[] = {"Show keys list", "Change active key", "Add new key", 
 const uint8_t SETTINGS_NUMBER = 4;
 char *SettingListPtr[] = {"Change module mode", "Set time", "Set time zone", "Back"};
 
+const uint8_t WORKING_MODE_NUMBER = 2;
+char *WorkingModeListPtr[] = {"PASSIVE", "ACTIVE"};
+
 enum ListType {
 	TYPE_OPTIONS = 0,
-	TYPE_SETTINGS
+	TYPE_SETTINGS,
+	TYPE_WORK_MODE,
 };
 
 
@@ -111,6 +115,50 @@ uint8_t printSettings() {
 	}
 }
 
+
+uint8_t printWrokingMode() {
+	uint8_t currentWorkNum = {0};
+
+	while(1) {
+		HAL_Delay(130);
+
+		clearTerminal();
+		printControlInfo(TYPE_SETTINGS);
+
+		for(uint8_t i = 0; i < WORKING_MODE_NUMBER; i++) {
+			if( currentWorkNum != SET_NONE && currentWorkNum == (i+1) ) printf("->");		// Active options
+			printf("\t* %s\n", WorkingModeListPtr[i]);
+		}
+		printf("\n");
+
+		while(1) {
+			if(HAL_GPIO_ReadPin(USER_BTN1_GPIO_Port, USER_BTN1_Pin) == GPIO_PIN_RESET) {
+				if(currentWorkNum > 0 && currentWorkNum <= WORKING_MODE_NUMBER) {
+					printf("Selected working mode: %u-%s\n", currentWorkNum, WorkingModeListPtr[currentWorkNum-1]);
+					return currentWorkNum;
+				} else {
+					printConsolePostfix(PRI_WARNING);
+					printf("The selected mode [%u] is invalid.\n", currentWorkNum);
+					return 0;
+				}
+
+			} else if(HAL_GPIO_ReadPin(GPIOC, USER_BTN_DOWN_Pin) == GPIO_PIN_RESET) {
+//				Set next setting:
+				if(currentWorkNum < WORKING_MODE_NUMBER) currentWorkNum++;
+//				printConsolePostfix(PRI_DEBUG);
+//				printf("%u\n", currentSetNum);
+				break;
+			} else if(HAL_GPIO_ReadPin(GPIOC, USER_BTN_UP_Pin) == GPIO_PIN_RESET) {
+//				Set previous setting:
+				if(currentWorkNum > 0) currentWorkNum--;
+//				printConsolePostfix(PRI_DEBUG);
+//				printf("%u\n", currentSetNum);
+				break;
+			}
+		}
+	}
+}
+
 //********************************************************************************************
 // PRIVATE
 //********************************************************************************************
@@ -121,6 +169,9 @@ void printControlInfo(int infoType) {
 			break;
 		case TYPE_SETTINGS:
 			printf("List of available settings:\n");
+			break;
+		case TYPE_WORK_MODE:
+			printf("List of available modes:\n");
 			break;
 		default:
 			printConsolePostfix(PRI_ERROR);

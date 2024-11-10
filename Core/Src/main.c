@@ -83,7 +83,7 @@ typedef struct tm DateTime_t;
 //********************************************************************************************
 //GLOBAL VARIABLES (RAM)
 //********************************************************************************************
-const bool ACTIVE_MODE = false;	// PASSIVE_MODE - the device itself generates a token every 0 and 30 seconds
+volatile bool ACTIVE_MODE = false;	// PASSIVE_MODE - the device itself generates a token every 0 and 30 seconds
 //const bool ACTIVE_MODE = true;		// ACTIVE_MODE  - the device generates a token only when the button is pressed
 
 volatile bool OPT_MODE = false;
@@ -385,8 +385,22 @@ int main(void) {
 							if (setOption != SET_NONE) {
 								switch (setOption) {
 								case SET_CHANGE_MODE:
-									printf("SET MODE\n");
-	//				  			  		  TODO: Add function
+									HAL_Delay(250);
+
+									uint8_t setWorkMode = printWrokingMode();
+
+									if (setWorkMode != WORK_NONE) {
+										switch(setWorkMode) {
+										case WORK_PASSIVE:
+											ACTIVE_MODE = false;
+											break;
+										case WORK_ACTIVE:
+											ACTIVE_MODE = true;
+											break;
+										default:
+											break;
+										}
+									}
 									break;
 								case SET_CHANGE_TIME:
 									printf("SET TIME\n");
