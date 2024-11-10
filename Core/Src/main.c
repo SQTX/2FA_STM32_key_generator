@@ -1,20 +1,20 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2024 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2024 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -79,11 +79,10 @@ typedef struct tm DateTime_t;
 //const char encoded[] = {"JV4UYZLHN5CG633S"};	// Encoded key is a word
 //const char encodedKey[] = {"JBSWY3DPEHPK3PXP"};	// Encoded key isn't a word
 
-
 //********************************************************************************************
 //GLOBAL VARIABLES (RAM)
 //********************************************************************************************
-const bool ACTIVE_MODE = false;		// PASSIVE_MODE - the device itself generates a token every 0 and 30 seconds
+const bool ACTIVE_MODE = false;	// PASSIVE_MODE - the device itself generates a token every 0 and 30 seconds
 //const bool ACTIVE_MODE = true;		// ACTIVE_MODE  - the device generates a token only when the button is pressed
 
 volatile bool OPT_MODE = false;
@@ -94,15 +93,13 @@ volatile bool OPT_MODE = false;
 //1: [CHOOSE_MODE] 	OK - okey button | UP - move up | DOWN - move up
 //uint8_t btnMode = 0x00;
 
+RTC_TimeTypeDef rtcTime = { 0 };
+RTC_DateTypeDef rtcDate = { 0 };
 
-RTC_TimeTypeDef rtcTime = {0};
-RTC_DateTypeDef rtcDate = {0};
-
-uint8_t* key = {NULL};
-char* name = {NULL};
-uint8_t keySize = {0};
-uint8_t nameSize = {0};
-
+uint8_t *key = { NULL };
+char *name = { NULL };
+uint8_t keySize = { 0 };
+uint8_t nameSize = { 0 };
 
 //********************************************************************************************
 //Token generator functions:
@@ -140,170 +137,197 @@ uint8_t nameSize = {0};
 ////		retun key
 //}
 
+void searchAndSetKey(const uint8_t keysNumber, uint8_t *currentKeyAddrPtr) {
+	uint8_t currentKey[13] = { 0 };		// Container for key from memory
+	uint8_t currentKeyName[5] = { 0 };	// Container for name from memory
+	uint8_t data[13 + 5] = { 0 };		// Container for all data from memory
 
+	readKeyFromMemory(data, keysNumber, *currentKeyAddrPtr, NULL, currentKeyAddrPtr);
+
+	for (int i = 0; i < 13; i++)
+		currentKey[i] = data[i];			//  Get key from data
+	for (int i = 0; i < 5; i++)
+		currentKeyName[i] = data[i + 13];	//  Get name from data
+
+	//  Trim zeros and optimization arrays:
+	keySize = trimZeros(currentKey, 13);
+	nameSize = trimZeros(currentKeyName, 5);
+
+	//  Dynamic allocated key array:
+	key = (uint8_t*) malloc(keySize * sizeof(uint8_t));
+	for (int i = 0; i < keySize; i++) {
+		key[i] = currentKey[i];
+	}
+	//  Dynamic allocated name array:
+	name = (char*) malloc((nameSize + 1) * sizeof(char));
+	for (int i = 0; i < nameSize; i++) {
+		name[i] = (char) currentKeyName[i];
+	}
+	name[nameSize] = '\0';
+
+	printf("Current used key:\t\t['%s']\n", name);// Print current used key name
+	//  printf("Key: ");
+	//  for(int i = 0; i < 13; i++) printf("%x ", currentKey[i]);
+	//  printf("\n");
+
+	printf("===========================================================\n");
+}
 
 /* USER CODE END 0 */
 
 /**
-  * @brief  The application entry point.
-  * @retval int
-  */
-int main(void)
-{
+ * @brief  The application entry point.
+ * @retval int
+ */
+int main(void) {
 
-  /* USER CODE BEGIN 1 */
+	/* USER CODE BEGIN 1 */
 
-  /* USER CODE END 1 */
+	/* USER CODE END 1 */
 
-  /* MCU Configuration--------------------------------------------------------*/
+	/* MCU Configuration--------------------------------------------------------*/
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+	/* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+	HAL_Init();
 
-  /* USER CODE BEGIN Init */
+	/* USER CODE BEGIN Init */
 
-  /* USER CODE END Init */
+	/* USER CODE END Init */
 
-  /* Configure the system clock */
-  SystemClock_Config();
+	/* Configure the system clock */
+	SystemClock_Config();
 
-  /* USER CODE BEGIN SysInit */
+	/* USER CODE BEGIN SysInit */
 
-  /* USER CODE END SysInit */
+	/* USER CODE END SysInit */
 
-  /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_USART2_UART_Init();
-  MX_CRC_Init();
-  MX_RTC_Init();
-  MX_I2C1_Init();
-  /* USER CODE BEGIN 2 */
+	/* Initialize all configured peripherals */
+	MX_GPIO_Init();
+	MX_USART2_UART_Init();
+	MX_CRC_Init();
+	MX_RTC_Init();
+	MX_I2C1_Init();
+	/* USER CODE BEGIN 2 */
 //  resetMemoryTest();		// TEST FUNCTION
 //  addKeyTest();			// TEST FUNCTION
-
-  printf("===========================================================\n");
-  printf("Device initialization process\n");
-  printf("-----------------------------------------------------------\n");
+	printf("===========================================================\n");
+	printf("Device initialization process\n");
+	printf("-----------------------------------------------------------\n");
 //  ********************************************************************************************
 //  Initializing the Memory
 //  ********************************************************************************************
-  if(checkMemory()){
-	  printf("Memory status\t\t\t[OK]\n");
-  } else {
-	  printf("Memory status\t\t\t[WRONG]\n");
-	  printf("Memory initializing...\n");
-	  if(initMemory(128)){
-		  printf("Memory initialize\t\t[OK]\n");
+	if (checkMemory()) {
+		printf("Memory status\t\t\t[OK]\n");
+	} else {
+		printf("Memory status\t\t\t[WRONG]\n");
+		printf("Memory initializing...\n");
+		if (initMemory(128)) {
+			printf("Memory initialize\t\t[OK]\n");
 //		  TODO: ADD NEW, first KEY
-	  } else {
-		  printf("Memory initialize\t\t[ERROR]\n");
-	  }
-  }
+		} else {
+			printf("Memory initialize\t\t[ERROR]\n");
+		}
+	}
 
 //  addKeyTest();
-
 
 //  ********************************************************************************************
 //  Initializing the RTC clock
 //  ********************************************************************************************
-  initClockRTC(&rtcTime, &rtcDate);											// Initializing the RTC clock
-
+	initClockRTC(&rtcTime, &rtcDate);			// Initializing the RTC clock
 
 //  ********************************************************************************************
 //  Get general data from memory
 //  ********************************************************************************************
-  uint8_t generalData[6] = {0};
-  readGeneralDataFromMemory(generalData);
+	uint8_t generalData[6] = { 0 };
+	readGeneralDataFromMemory(generalData);
 
-  const uint8_t MAX_KEYS = generalData[2];
-  uint8_t keysNumber = generalData[3];
-  uint8_t currentKeyAddr = generalData[4];
-  uint8_t generalFlags = generalData[5];
+	const uint8_t MAX_KEYS = generalData[2];
+	uint8_t keysNumber = generalData[3];
+	uint8_t currentKeyAddr = generalData[4];
+	uint8_t generalFlags = generalData[5];
 
-  printf("-----------------------------------------------------------\n");
-  printf("General information: \n");
-  printf("-----------------------------------------------------------\n");
-  printf("The device works in the mode:\t[");
-  ACTIVE_MODE ? printf("ACTIVE") : printf("PASSIVE");
-  printf("]\n");
-  printLocalTime(&rtcTime, &rtcDate);
-  printf("Epoch TimeStamp:\t\t[%ld]\n", getTimeStamp(&rtcTime, &rtcDate));	// Show current epoch TimeStamp
-  printf("Maximum keys in memory:\t\t[%u]\n", MAX_KEYS);
-  printf("Current number of keys:\t\t[%u]\n", keysNumber);
-
+	printf("-----------------------------------------------------------\n");
+	printf("General information: \n");
+	printf("-----------------------------------------------------------\n");
+	printf("The device works in the mode:\t[");
+	ACTIVE_MODE ? printf("ACTIVE") : printf("PASSIVE");
+	printf("]\n");
+	printLocalTime(&rtcTime, &rtcDate);
+	printf("Epoch TimeStamp:\t\t[%ld]\n", getTimeStamp(&rtcTime, &rtcDate));// Show current epoch TimeStamp
+	printf("Maximum keys in memory:\t\t[%u]\n", MAX_KEYS);
+	printf("Current number of keys:\t\t[%u]\n", keysNumber);
 
 //  ********************************************************************************************
 //  Get default/last used key from memory
 //  ********************************************************************************************
-  uint8_t currentKey[13] = {0};		// Container for key from memory
-  uint8_t currentKeyName[5] = {0};	// Container for name from memory
-  uint8_t data[13+5] = {0};			// Container for all data from memory
+	searchAndSetKey(keysNumber, &currentKeyAddr);
+//	uint8_t currentKey[13] = { 0 };		// Container for key from memory
+//	uint8_t currentKeyName[5] = { 0 };	// Container for name from memory
+//	uint8_t data[13 + 5] = { 0 };		// Container for all data from memory
+//
+//	readKeyFromMemory(data, keysNumber, currentKeyAddr, NULL, &currentKeyAddr);
+//
+//	for (int i = 0; i < 13; i++)
+//		currentKey[i] = data[i];			//  Get key from data
+//	for (int i = 0; i < 5; i++)
+//		currentKeyName[i] = data[i + 13];	//  Get name from data
+//
+////  Trim zeros and optimization arrays:
+//	keySize = trimZeros(currentKey, 13);
+//	nameSize = trimZeros(currentKeyName, 5);
+//
+////  Dynamic allocated key array:
+//	key = (uint8_t*) malloc(keySize * sizeof(uint8_t));
+//	for (int i = 0; i < keySize; i++) {
+//		key[i] = currentKey[i];
+//	}
+////  Dynamic allocated name array:
+//	name = (char*) malloc((nameSize + 1) * sizeof(char));
+//	for (int i = 0; i < nameSize; i++) {
+//		name[i] = (char) currentKeyName[i];
+//	}
+//	name[nameSize] = '\0';
+//
+//	printf("Current used key:\t\t['%s']\n", name);// Print current used key name
+////  printf("Key: ");
+////  for(int i = 0; i < 13; i++) printf("%x ", currentKey[i]);
+////  printf("\n");
+//
+//	printf("===========================================================\n");
 
-  readKeyFromMemory(data, keysNumber, currentKeyAddr, NULL, &currentKeyAddr);
-
-
-  for(int i = 0; i < 13; i++) currentKey[i] = data[i];			//  Get key from data
-  for(int i = 0; i < 5; i++) currentKeyName[i] = data[i+13];	//  Get name from data
-
-
-//  Trim zeros and optimization arrays:
-  keySize = trimZeros(currentKey, 13);
-  nameSize = trimZeros(currentKeyName, 5);
-
-//  Dynamic allocated key array:
-  key = (uint8_t*) malloc( keySize * sizeof(uint8_t) );
-  for(int i = 0; i < keySize; i++) {
-	  key[i] = currentKey[i];
-  }
-//  Dynamic allocated name array:
-  name = (char*) malloc( (nameSize+1) * sizeof(char) );
-  for(int i = 0; i < nameSize; i++) {
-	  name[i] = (char)currentKeyName[i];
-  }
-  name[nameSize] = '\0';
-
-
-  printf("Current used key:\t\t['%s']\n", name);				// Print current used key name
-//  printf("Key: ");
-//  for(int i = 0; i < 13; i++) printf("%x ", currentKey[i]);
-//  printf("\n");
-
-  printf("===========================================================\n");
-
-/*
-//  ********************************************************************************************
-//  Conversion Encoded key to normal key (HARD_CODE ENCODED KEY - NOT USE WITH MEMORY)
-//  ********************************************************************************************
-	uint8_t encodedLength = {(sizeof encodedKey)-1};					// Encoded key length (without '\n')
-	printf("Code: %s\t| Size: %u\n", encodedKey, encodedLength);
-
-
-	uint8_t *key = {NULL};												// Empty pointer for key array
-	uint8_t keySize = {base32ToHex(encodedKey, encodedLength, &key)};	// Convert key from BASE32 to Hex
-	if(key == NULL) printf("[ERROR] Failed to allocate memory.\n");		// ERROR alert
+	/*
+	 //  ********************************************************************************************
+	 //  Conversion Encoded key to normal key (HARD_CODE ENCODED KEY - NOT USE WITH MEMORY)
+	 //  ********************************************************************************************
+	 uint8_t encodedLength = {(sizeof encodedKey)-1};					// Encoded key length (without '\n')
+	 printf("Code: %s\t| Size: %u\n", encodedKey, encodedLength);
 
 
-	printf("Token size: %u\n", keySize);
-	printf("Dekodowany tekst: ");
-	for (int i = 0; i < keySize; i++) {
-//		printf("%c", key[i]);
-	    printf("0x%x ", key[i]);
-	}
-	printf("\n");
-*/
+	 uint8_t *key = {NULL};												// Empty pointer for key array
+	 uint8_t keySize = {base32ToHex(encodedKey, encodedLength, &key)};	// Convert key from BASE32 to Hex
+	 if(key == NULL) printf("[ERROR] Failed to allocate memory.\n");		// ERROR alert
+
+
+	 printf("Token size: %u\n", keySize);
+	 printf("Dekodowany tekst: ");
+	 for (int i = 0; i < keySize; i++) {
+	 //		printf("%c", key[i]);
+	 printf("0x%x ", key[i]);
+	 }
+	 printf("\n");
+	 */
 
 //  const uint8_t MAX_KEYS = 5;
 //  uint8_t keysNumber = 2;
 //  uint8_t currentKeyAddr = 0x1c;
 //  uint8_t generalFlags = 0x00;
 
-
 //  searchKey(keysNumber);
 ////
 //  searchKey(keysNumber);
 ////
 //  addNewKey(MAX_KEYS, &keysNumber, &generalFlags);
-
 
 //  uint8_t currentKey[13] = {0};		// Container for key from memory
 //  uint8_t currentKeyName[5] = {0};	// Container for name from memory
@@ -323,7 +347,6 @@ int main(void)
 //	}
 //	printf("\n");
 //  printf("1.NewName: %s\n", currentKeyName);
-
 
 //  currentKeyAddr = 0x06;
 //
@@ -345,268 +368,248 @@ int main(void)
 //	printf("\n");
 //  printf("2.NewName: %s\n", currentKeyName2);
 
+	/* USER CODE END 2 */
 
-
-
-
-
-  /* USER CODE END 2 */
-
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
+	/* Infinite loop */
+	/* USER CODE BEGIN WHILE */
 //  printf("-----------------------------------------------------------\n");
 //  showKeysList(keysNumber);
 
-
-  while (1)
-  {
+	while (1) {
 //	  ********************************************************************************************
 //	  Option mode
 //	  ********************************************************************************************
-	  if(OPT_MODE) {
-		  bool repeat = false;
+		if (OPT_MODE) {
+			bool repeat = false;
 
+			do {
+				repeat = false;
+				uint8_t option = printOptions();
 
-		  do{
-			  repeat = false;
-			  uint8_t option = printOptions();
+				if (option != 0) {
+					switch (option) {
+					case 1:
+						showKeysList(keysNumber);
+						break;
+					case 2:
+						uint8_t currentKeyAddr = { 0 };
 
-			  if(option != 0) {
-				  switch(option) {
-				  	  case 1:
-				  		  showKeysList(keysNumber);
-				  		  break;
-				  	  case 2:
-				  		  uint8_t currentKeyAddr = {0};
+						searchKey(keysNumber, &currentKeyAddr);
 
-				  		  searchKey(keysNumber, &currentKeyAddr);
+						free(key);
+						free(name);
 
-				  		  free(key);
-				  		  free(name);
+						searchAndSetKey(keysNumber, &currentKeyAddr);
 
+//						uint8_t currentKey[13] = { 0 };	// Container for key from memory
+//						uint8_t currentKeyName[5] = { 0 };// Container for name from memory
+//						uint8_t data[13 + 5] = { 0 };// Container for all data from memory
+//
+//						readKeyFromMemory(data, keysNumber, currentKeyAddr,
+//								NULL, &currentKeyAddr);
+//
+//						for (int i = 0; i < 13; i++)
+//							currentKey[i] = data[i];	//  Get key from data
+//						for (int i = 0; i < 5; i++)
+//							currentKeyName[i] = data[i + 13];//  Get name from data
+//
+//						//  Trim zeros and optimization arrays:
+//						keySize = trimZeros(currentKey, 13);
+//						nameSize = trimZeros(currentKeyName, 5);
+//
+//						//  Dynamic allocated key array:
+//						key = (uint8_t*) malloc(keySize * sizeof(uint8_t));
+//						for (int i = 0; i < keySize; i++) {
+//							key[i] = currentKey[i];
+//						}
+//						//  Dynamic allocated name array:
+//						name = (char*) malloc((nameSize + 1) * sizeof(char));
+//						for (int i = 0; i < nameSize; i++) {
+//							name[i] = (char) currentKeyName[i];
+//						}
+//						name[nameSize] = '\0';
+//
+//						printf("Current used key:\t\t['%s']\n", name);// Print current used key name
+//						//  printf("Key: ");
+//						//  for(int i = 0; i < 13; i++) printf("%x ", currentKey[i]);
+//						//  printf("\n");
+//
+//						printf(
+//								"===========================================================\n");
 
+//				  		  TODO: Wpakowac powyzszy kod w funckje
+						break;
+					case 3:
+						addNewKey(MAX_KEYS, &keysNumber, &generalFlags);
+						break;
+					case 4:
+						deleteKey(&keysNumber);
+						break;
+					case 5:
+						HAL_Delay(250);
 
-				  		  uint8_t currentKey[13] = {0};		// Container for key from memory
-				  		  uint8_t currentKeyName[5] = {0};	// Container for name from memory
-				  		  uint8_t data[13+5] = {0};			// Container for all data from memory
+						uint8_t setOption = printSettings();
 
-				  		  readKeyFromMemory(data, keysNumber, currentKeyAddr, NULL, &currentKeyAddr);
-
-
-				  		  for(int i = 0; i < 13; i++) currentKey[i] = data[i];			//  Get key from data
-				  		  for(int i = 0; i < 5; i++) currentKeyName[i] = data[i+13];	//  Get name from data
-
-
-				  		//  Trim zeros and optimization arrays:
-				  		  keySize = trimZeros(currentKey, 13);
-				  		  nameSize = trimZeros(currentKeyName, 5);
-
-				  		//  Dynamic allocated key array:
-				  		  key = (uint8_t*) malloc( keySize * sizeof(uint8_t) );
-				  		  for(int i = 0; i < keySize; i++) {
-				  			  key[i] = currentKey[i];
-				  		  }
-				  		//  Dynamic allocated name array:
-				  		  name = (char*) malloc( (nameSize+1) * sizeof(char) );
-				  		  for(int i = 0; i < nameSize; i++) {
-				  			  name[i] = (char)currentKeyName[i];
-				  		  }
-				  		  name[nameSize] = '\0';
-
-
-				  		  printf("Current used key:\t\t['%s']\n", name);				// Print current used key name
-				  		//  printf("Key: ");
-				  		//  for(int i = 0; i < 13; i++) printf("%x ", currentKey[i]);
-				  		//  printf("\n");
-
-				  		  printf("===========================================================\n");
-
-
-
-
-
-
-
-
-//				  		  TODO: Add function
-				  		  break;
-				  	  case 3:
-				  		  addNewKey(MAX_KEYS, &keysNumber, &generalFlags);
-				  		  break;
-				  	  case 4:
-				  		  deleteKey(&keysNumber);
-				  		  break;
-				  	  case 5:
-				  		  HAL_Delay(250);
-
-				  		  uint8_t setOption = printSettings();
-
-				  		  if(setOption != 0) {
-				  			  switch(setOption) {
-				  			  	  case 1:
-				  			  		  printf("SET MODE\n");
+						if (setOption != 0) {
+							switch (setOption) {
+							case 1:
+								printf("SET MODE\n");
 //				  			  		  TODO: Add function
-				  			  		  break;
-				  			  	  case 2:
-				  			  		  printf("SET TIME\n");
+								break;
+							case 2:
+								printf("SET TIME\n");
 //				  			  		  TODO: Add function
-				  			  		  break;
-				  			  	  case 3:
-				  			  		  printf("SET TIMEZONE\n");
+								break;
+							case 3:
+								printf("SET TIMEZONE\n");
 //				  			  		  TODO: Add function
-				  			  		  break;
-				  			  	  case 4:
-				  			  		  repeat = true;
-				  			  		  break;
-				  			  	  default:
-				  			  		  break;
-				  			  }
-				  		  }
-				  		  break;
-				  	  case 6:
-				  		  break;
-				  	  default:
-				  		  break;
-				  }
-			  }
-		  } while(repeat);
+								break;
+							case 4:
+								repeat = true;
+								break;
+							default:
+								break;
+							}
+						}
+						break;
+					case 6:
+						break;
+					default:
+						break;
+					}
+				}
+			} while (repeat);
 
-		  OPT_MODE = false;
-	  }
-
+			OPT_MODE = false;
+		}
 
 //	  ********************************************************************************************
 //	  Generate TOTP TOKEN in PASSIVE_MODE
 //	  ********************************************************************************************
-	  if(!ACTIVE_MODE && !OPT_MODE) {
-		  uint32_t token = {generateToken(key, keySize, getTimeStamp(&rtcTime, &rtcDate))};	// Generate TOTP token
-		  printf("Token:\t\t[%06lu]\n", token);
+		if (!ACTIVE_MODE && !OPT_MODE) {
+			uint32_t token = { generateToken(key, keySize,
+					getTimeStamp(&rtcTime, &rtcDate)) };// Generate TOTP token
+			printf("Token:\t\t[%06lu]\n", token);
 
+			HAL_RTC_GetDate(&hrtc, &rtcDate, RTC_FORMAT_BIN);
+			HAL_RTC_GetTime(&hrtc, &rtcTime, RTC_FORMAT_BIN);
+			uint8_t nowSeconds = rtcTime.Seconds;
+			uint8_t secToRegenerate = { 0 };
 
-		  HAL_RTC_GetDate(&hrtc, &rtcDate, RTC_FORMAT_BIN);
-		  HAL_RTC_GetTime(&hrtc, &rtcTime, RTC_FORMAT_BIN);
-		  uint8_t nowSeconds = rtcTime.Seconds;
-		  uint8_t secToRegenerate = {0};
+			if (nowSeconds < 30) {
+				secToRegenerate = 30 - nowSeconds;
+			} else if (nowSeconds > 30 && nowSeconds < 60) {
+				secToRegenerate = 60 - nowSeconds;
+			} else {
+				secToRegenerate = 30;
+			}
 
-		  if (nowSeconds < 30) {
-			  secToRegenerate = 30 - nowSeconds;
-		  } else if (nowSeconds > 30 && nowSeconds < 60) {
-			  secToRegenerate = 60 - nowSeconds;
-		  } else {
-			  secToRegenerate = 30;
-		  }
-
-		  HAL_Delay(secToRegenerate*1000);	// New token in 0' and 30' second
-	//	  HAL_Delay(30000);					// New token every 30sec
-	  }
+			HAL_Delay(secToRegenerate * 1000);// New token in 0' and 30' second
+			//	  HAL_Delay(30000);					// New token every 30sec
+		}
 
 //	  ********************************************************************************************
-    /* USER CODE END WHILE */
+		/* USER CODE END WHILE */
 
-    /* USER CODE BEGIN 3 */
-  }
-  free(key);
-  free(name);
-  /* USER CODE END 3 */
+		/* USER CODE BEGIN 3 */
+	}
+	free(key);
+	free(name);
+	/* USER CODE END 3 */
 }
 
 /**
-  * @brief System Clock Configuration
-  * @retval None
-  */
-void SystemClock_Config(void)
-{
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+ * @brief System Clock Configuration
+ * @retval None
+ */
+void SystemClock_Config(void) {
+	RCC_OscInitTypeDef RCC_OscInitStruct = { 0 };
+	RCC_ClkInitTypeDef RCC_ClkInitStruct = { 0 };
 
-  /** Configure the main internal regulator output voltage
-  */
-  if (HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1) != HAL_OK)
-  {
-    Error_Handler();
-  }
+	/** Configure the main internal regulator output voltage
+	 */
+	if (HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1)
+			!= HAL_OK) {
+		Error_Handler();
+	}
 
-  /** Configure LSE Drive Capability
-  */
-  HAL_PWR_EnableBkUpAccess();
-  __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
+	/** Configure LSE Drive Capability
+	 */
+	HAL_PWR_EnableBkUpAccess();
+	__HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
 
-  /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
-  */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSE|RCC_OSCILLATORTYPE_MSI;
-  RCC_OscInitStruct.LSEState = RCC_LSE_ON;
-  RCC_OscInitStruct.MSIState = RCC_MSI_ON;
-  RCC_OscInitStruct.MSICalibrationValue = 0;
-  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_6;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-  {
-    Error_Handler();
-  }
+	/** Initializes the RCC Oscillators according to the specified parameters
+	 * in the RCC_OscInitTypeDef structure.
+	 */
+	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSE
+			| RCC_OSCILLATORTYPE_MSI;
+	RCC_OscInitStruct.LSEState = RCC_LSE_ON;
+	RCC_OscInitStruct.MSIState = RCC_MSI_ON;
+	RCC_OscInitStruct.MSICalibrationValue = 0;
+	RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_6;
+	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
+		Error_Handler();
+	}
 
-  /** Initializes the CPU, AHB and APB buses clocks
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_MSI;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+	/** Initializes the CPU, AHB and APB buses clocks
+	 */
+	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK
+			| RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_MSI;
+	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
-  {
-    Error_Handler();
-  }
+	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK) {
+		Error_Handler();
+	}
 
-  /** Enable MSI Auto calibration
-  */
-  HAL_RCCEx_EnableMSIPLLMode();
+	/** Enable MSI Auto calibration
+	 */
+	HAL_RCCEx_EnableMSIPLLMode();
 }
 
 /* USER CODE BEGIN 4 */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-  if(GPIO_Pin == USER_BTN1_Pin) {
+	if (GPIO_Pin == USER_BTN1_Pin) {
 //	  ********************************************************************************************
 //	  Generate TOTP TOKEN in ACTIVE_MODE
 //	  ********************************************************************************************
-	  if(ACTIVE_MODE) {
-		  uint32_t token = {generateToken(key, keySize, getTimeStamp(&rtcTime, &rtcDate))};	// Generate TOTP token
-		  printf("Token:\t\t[%06lu]\n", token);
-	  }
-
-
+		if (ACTIVE_MODE) {
+			uint32_t token = { generateToken(key, keySize,
+					getTimeStamp(&rtcTime, &rtcDate)) };// Generate TOTP token
+			printf("Token:\t\t[%06lu]\n", token);
+		}
 
 //	  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-  }
+	}
 
-  if(!OPT_MODE) {
-	  if(GPIO_Pin == USER_BTN_UP_Pin || GPIO_Pin == USER_BTN_DOWN_Pin) {
-		  OPT_MODE = true;
-	  }
+	if (!OPT_MODE) {
+		if (GPIO_Pin == USER_BTN_UP_Pin || GPIO_Pin == USER_BTN_DOWN_Pin) {
+			OPT_MODE = true;
+		}
 
 //	  if(GPIO_Pin == USER_BTN_UP_Pin) {
 //		  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 //	  }else if(GPIO_Pin == USER_BTN_DOWN_Pin) {
 //		  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 //	  }
-  }
+	}
 }
 /* USER CODE END 4 */
 
 /**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
-void Error_Handler(void)
-{
-  /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
-  __disable_irq();
-  while (1)
-  {
-  }
-  /* USER CODE END Error_Handler_Debug */
+ * @brief  This function is executed in case of error occurrence.
+ * @retval None
+ */
+void Error_Handler(void) {
+	/* USER CODE BEGIN Error_Handler_Debug */
+	/* User can add his own implementation to report the HAL error return state */
+	__disable_irq();
+	while (1) {
+	}
+	/* USER CODE END Error_Handler_Debug */
 }
 
 #ifdef  USE_FULL_ASSERT
