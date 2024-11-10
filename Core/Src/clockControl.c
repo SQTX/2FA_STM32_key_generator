@@ -15,13 +15,13 @@ const int8_t TIMEZONE = {1};	// Poland: UTC+1h (local_winter_time_hour - 1h)
 //********************************************************************************************
 // PUBLIC
 //********************************************************************************************
-uint8_t initClockRTC(RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr) {
+uint8_t initClockRTC(volatile uint32_t *prevWatchDogReset, RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr) {
 	HAL_RTC_GetTime(&hrtc, rtcTimePtr, RTC_FORMAT_BIN);
 	HAL_RTC_GetDate(&hrtc, rtcDatePtr, RTC_FORMAT_BIN);
 
 	if(rtcDatePtr->Year <= 0 && rtcTimePtr->Hours <= 0) {
 		printf("RTC\t[not configured]\n");
-		getTimeFromUser(rtcTimePtr, rtcDatePtr);
+		getTimeFromUser(prevWatchDogReset, rtcTimePtr, rtcDatePtr);
 		return 1;
 	}
 	printf("RTC status\t\t\t[OK]\n");
@@ -57,7 +57,7 @@ void printLocalTime(RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr) {
 }
 
 
-void getTimeFromUser(RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr) {
+void getTimeFromUser(volatile uint32_t *prevWatchDogReset, RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr) {
 	DateTime_t datetime;
 
 	uint8_t flag = {1};
@@ -65,6 +65,7 @@ void getTimeFromUser(RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr) {
 	printf("Enter your current time [DD-MM-YYYY,hh:mm:ss]:\n");
 	fflush(stdout);
 	while(flag != 0) {
+		resetWatchDog(prevWatchDogReset);
 		uint8_t value = {0};
 
 		if (HAL_UART_Receive(&huart2, &value, 1, 0) == HAL_OK) {

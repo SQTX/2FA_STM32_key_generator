@@ -198,7 +198,7 @@ int main(void)
 //  ********************************************************************************************
 //  Initializing the RTC clock
 //  ********************************************************************************************
-	initClockRTC(&rtcTime, &rtcDate);			// Initializing the RTC clock
+	initClockRTC(&prevWatchDogReset, &rtcTime, &rtcDate);			// Initializing the RTC clock
 
 //  ********************************************************************************************
 //  Get general data from memory
@@ -325,7 +325,7 @@ int main(void)
 						case CHANGE_KEY:
 							uint8_t currentKeyAddr = { 0 };
 
-							searchKey(keysNumber, &currentKeyAddr);
+							searchKey(&prevWatchDogReset, keysNumber, &currentKeyAddr);
 
 							free(key);
 							free(name);
@@ -334,10 +334,10 @@ int main(void)
 
 							break;
 						case ADD_KEY:
-							addNewKey(MAX_KEYS, &keysNumber, &generalFlags);
+							addNewKey(&prevWatchDogReset, MAX_KEYS, &keysNumber, &generalFlags);
 							break;
 						case DELETE_KEY:
-							deleteKey(&keysNumber);
+							deleteKey(&prevWatchDogReset, &keysNumber);
 							break;
 						case SETTINGS:
 							HAL_Delay(250);
@@ -366,7 +366,7 @@ int main(void)
 									break;
 								case SET_CHANGE_TIME:
 									printf("SET TIME\n");
-									getTimeFromUser(&rtcTime, &rtcDate);
+									getTimeFromUser(&prevWatchDogReset, &rtcTime, &rtcDate);
 									break;
 								case SET_CHANGE_TIMEZONE:
 									printf("SET TIMEZONE\n");

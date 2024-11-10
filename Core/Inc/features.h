@@ -25,11 +25,11 @@
 #define PRINT_ENTRED_STRINGS		0	// 0 - OFF | 1 - ON
 
 
-int8_t addNewKey(const uint8_t MAX_KEYS, uint8_t* keysNumber, uint8_t* generalFlags);
+int8_t addNewKey(volatile uint32_t *prevWatchDogReset, const uint8_t MAX_KEYS, uint8_t* keysNumber, uint8_t* generalFlags);
 
-int8_t searchKey(uint8_t keysNumber, uint8_t* keyAddr);
+int8_t searchKey(volatile uint32_t *prevWatchDogReset, uint8_t keysNumber, uint8_t* keyAddr);
 
-int8_t deleteKey(uint8_t* keysNumber);
+int8_t deleteKey(volatile uint32_t *prevWatchDogReset, uint8_t* keysNumber);
 
 void showKeysList(uint8_t keysNumber);
 
