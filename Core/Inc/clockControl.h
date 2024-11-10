@@ -80,4 +80,7 @@ uint32_t getTimeStamp(RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr);
 void printLocalTime(RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr);
 
 
+void getTimeFromUser(RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr);
+
+
 #endif /* INC_CLOCKCONTROL_H_ */

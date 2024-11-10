@@ -12,8 +12,6 @@
 const int8_t TIMEZONE = {1};	// Poland: UTC+1h (local_winter_time_hour - 1h)
 
 
-void getTimeFromUser(RTC_TimeTypeDef *, RTC_DateTypeDef *);
-
 //********************************************************************************************
 // PUBLIC
 //********************************************************************************************
@@ -58,13 +56,7 @@ void printLocalTime(RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr) {
 				rtcTimePtr->Hours + TIMEZONE, rtcTimePtr->Minutes, rtcTimePtr->Seconds);
 }
 
-//********************************************************************************************
-// PRIVATE
-//********************************************************************************************
-/**
- * A function that retrieves the current time and date from the user. The data is assigned to
- * the RTC clock in UTC form.
- */
+
 void getTimeFromUser(RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr) {
 	DateTime_t datetime;
 
@@ -101,3 +93,10 @@ void getTimeFromUser(RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr) {
 		}
 	}
 }
+
+//TODO
+//void changeTimeZone() {
+//
+//}
+
+
