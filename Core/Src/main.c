@@ -83,16 +83,8 @@ typedef struct tm DateTime_t;
 //********************************************************************************************
 //GLOBAL VARIABLES (RAM)
 //********************************************************************************************
-volatile bool ACTIVE_MODE = false;	// PASSIVE_MODE - the device itself generates a token every 0 and 30 seconds
-//const bool ACTIVE_MODE = true;		// ACTIVE_MODE  - the device generates a token only when the button is pressed
-
+volatile bool ACTIVE_MODE = false;
 volatile bool OPT_MODE = false;
-//volatile bool OPT_MODE = true;
-
-//TODO: Tryby pracy przyciskow:
-//0: [NORMAL] 		OK - generate token (in ACTIVE_MODE) | UP - choose function | DOWN - settings
-//1: [CHOOSE_MODE] 	OK - okey button | UP - move up | DOWN - move up
-//uint8_t btnMode = 0x00;
 
 RTC_TimeTypeDef rtcTime = { 0 };
 RTC_DateTypeDef rtcDate = { 0 };
@@ -102,42 +94,10 @@ char *name = { NULL };
 uint8_t keySize = { 0 };
 uint8_t nameSize = { 0 };
 
-//********************************************************************************************
-//Token generator functions:
-//********************************************************************************************
-//void addKey() {
-//	printf("Wpisz nowy klucz: \n");
-////	keyBase32 = typeText();
-//	char keyBase32[] = {"JBSWY3DPEHPK3PXP"};
-//
-//	uint8_t keyBase32Length = {(sizeof keyBase32)-1};					// Encoded key length (without '\n')
-//	uint8_t *key = {NULL};												// Empty pointer for key array
-//	uint8_t keySize = {base32ToHex(keyBase32, keyBase32Length, &key)};	// Convert key from BASE32 to Hex
-//	if(key == NULL) printf("[ERROR] Failed to allocate memory.\n");		// ERROR alert
-////	Print key in HEX:
-//	printf("Dekodowany tekst: ");
-//	for (int i = 0; i < keySize; i++) {
-//	    printf("0x%x ", key[i]);
-//	}
-//	printf("\n");
-//
-//
-//	printf("Nadaj kluczowi nazwe: \n");
-////	keyName = typeText()
-////	uint8_t keyNameLength = {(sizeof keyName)-1};
-//
-////	TODO: CRC
-//
-////	saveKeyInMemory(key, keySize, keyName, keyNameLength)
-//}
-//
-//
-//void getKey(keyName) {
-////	keySize = getKeyFromMemory(keyName, key);
-////	if (keySize = (sizeof keyBase32)-1)
-////		retun key
-//}
 
+//********************************************************************************************
+//Function to search key in memory and set it as active
+//********************************************************************************************
 void searchAndSetKey(const uint8_t keysNumber, uint8_t *currentKeyAddrPtr) {
 	uint8_t currentKey[13] = { 0 };		// Container for key from memory
 	uint8_t currentKeyName[5] = { 0 };	// Container for name from memory
@@ -404,11 +364,11 @@ int main(void) {
 									break;
 								case SET_CHANGE_TIME:
 									printf("SET TIME\n");
-	//				  			  		  TODO: Add function
+									getTimeFromUser(&rtcTime, &rtcDate);
 									break;
 								case SET_CHANGE_TIMEZONE:
 									printf("SET TIMEZONE\n");
-	//				  			  		  TODO: Add function
+//				  			  		  TODO: Add function
 									break;
 								case SET_BACK:
 									repeat = true;

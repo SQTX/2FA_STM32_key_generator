@@ -37,8 +37,8 @@ typedef enum {
 
 typedef enum {
 	WORK_NONE = 0,
-	WORK_PASSIVE,
-	WORK_ACTIVE
+	WORK_PASSIVE,		// PASSIVE_MODE - the device itself generates a token every 0 and 30 seconds
+	WORK_ACTIVE			// ACTIVE_MODE  - the device generates a token only when the button is pressed
 } WorkingMode;
 
 
