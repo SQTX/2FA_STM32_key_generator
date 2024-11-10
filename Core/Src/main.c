@@ -40,6 +40,7 @@
 #include "memoryController.h"
 #include "features.h"
 #include "interface.h"
+#include "printer.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -170,7 +171,8 @@ void searchAndSetKey(const uint8_t keysNumber, uint8_t *currentKeyAddrPtr) {
 	//  for(int i = 0; i < 13; i++) printf("%x ", currentKey[i]);
 	//  printf("\n");
 
-	printf("===========================================================\n");
+	printLineSeparator('=');
+	printf("\n");
 }
 
 /* USER CODE END 0 */
@@ -210,9 +212,11 @@ int main(void) {
 	/* USER CODE BEGIN 2 */
 //  resetMemoryTest();		// TEST FUNCTION
 //  addKeyTest();			// TEST FUNCTION
-	printf("===========================================================\n");
-	printf("Device initialization process\n");
-	printf("-----------------------------------------------------------\n");
+
+	printStartInfo();
+	printTitle("Device initialization process");
+
+
 //  ********************************************************************************************
 //  Initializing the Memory
 //  ********************************************************************************************
@@ -247,9 +251,7 @@ int main(void) {
 	uint8_t currentKeyAddr = generalData[4];
 	uint8_t generalFlags = generalData[5];
 
-	printf("-----------------------------------------------------------\n");
-	printf("General information: \n");
-	printf("-----------------------------------------------------------\n");
+	printSubTitle("General information:");
 	printf("The device works in the mode:\t[");
 	ACTIVE_MODE ? printf("ACTIVE") : printf("PASSIVE");
 	printf("]\n");
@@ -403,6 +405,7 @@ int main(void) {
 							}
 							break;
 						case BACK:
+							repeat = false;
 							break;
 						default:
 							break;

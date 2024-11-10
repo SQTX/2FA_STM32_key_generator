@@ -8,9 +8,11 @@
 #ifndef INC_INTERFACE_H_
 #define INC_INTERFACE_H_
 
+#include <stdio.h>
 #include <stdbool.h>
 #include "stm32l4xx.h"
 #include "gpio.h"
+#include "printer.h"
 
 
 typedef enum {

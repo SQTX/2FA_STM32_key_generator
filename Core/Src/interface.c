@@ -12,8 +12,15 @@ const uint8_t OPTIONS_NUMBER = 6;
 char *OptionsListPtr[] = {"Show keys list", "Change active key", "Add new key", "Delete key", "Settings", "Back"};
 
 const uint8_t SETTINGS_NUMBER = 4;
-char *SettingListPtr[] = {"Change module mode", "Set time", "Set timezone", "Back"};
+char *SettingListPtr[] = {"Change module mode", "Set time", "Set time zone", "Back"};
 
+enum ListType {
+	TYPE_OPTIONS = 0,
+	TYPE_SETTINGS
+};
+
+
+void printControlInfo(int);
 
 //********************************************************************************************
 // PUBLIC
@@ -22,11 +29,9 @@ uint8_t printOptions() {
 	uint8_t currentOptNum = {0};
 
 	while(1) {
-		for(uint8_t i = 0; i < 10; i++) printf('\n');
+		clearTerminal();
+		printControlInfo(TYPE_OPTIONS);
 
-		printf("Dostepne opcje:\n");
-		printf("(Wybor opcji: W celu wyboru konkretnej opcji posluguj sie przyciskami Up i Down lub podaja konkretna opcje na klawiaturze.)\n");
-		printf("(Akceptacja: W celu zaakceptowania wybranej opcji nacisnij przyciksk MAIN lub ENTER po wpisaniu wartosci na klawiaturze.)\n");
 		for(uint8_t i = 0; i < OPTIONS_NUMBER; i++) {
 			if( currentOptNum != NONE && currentOptNum == (i+1) ) printf("->");		// Active options
 			printf("\t* %s\n", OptionsListPtr[i]);
@@ -38,22 +43,24 @@ uint8_t printOptions() {
 
 			if(HAL_GPIO_ReadPin(USER_BTN1_GPIO_Port, USER_BTN1_Pin) == GPIO_PIN_RESET) {
 				if(currentOptNum > 0 && currentOptNum <= OPTIONS_NUMBER) {
-					printf("Wybrana opcja: (%u) %s\n", currentOptNum, OptionsListPtr[currentOptNum-1]);
+					printf("Selected option: %u-%s\n", currentOptNum, OptionsListPtr[currentOptNum-1]);
 					return currentOptNum;
 				} else {
-					printf("Wybrana opcja (%u) jest niepoprawna!\n", currentOptNum);
+					printf("The selected option [%u] is invalid.\n", currentOptNum);
 					return 0;
 				}
 
 			} else if(HAL_GPIO_ReadPin(GPIOC, USER_BTN_DOWN_Pin) == GPIO_PIN_RESET) {
 //				Set next option:
 				if(currentOptNum < OPTIONS_NUMBER) currentOptNum++;
-				printf("[DEBUG] %u\n", currentOptNum);
+//				printConsolePostfix(PRI_DEBUG);
+//				printf("%u\n", currentOptNum);
 				break;
 			} else if(HAL_GPIO_ReadPin(GPIOC, USER_BTN_UP_Pin) == GPIO_PIN_RESET) {
 //				Set previous option:
 				if(currentOptNum > 0) currentOptNum--;
-				printf("[DEBUG] %u\n", currentOptNum);
+//				printConsolePostfix(PRI_DEBUG);
+//				printf("%u\n", currentOptNum);
 				break;
 			}
 		}
@@ -67,11 +74,9 @@ uint8_t printSettings() {
 	while(1) {
 		HAL_Delay(130);
 
-		for(uint8_t i = 0; i < 10; i++) printf("\n");
+		clearTerminal();
+		printControlInfo(TYPE_SETTINGS);
 
-		printf("Dostepne ustawienia:\n");
-		printf("(Wybor opcji: W celu wyboru konkretnej opcji posluguj sie przyciskami Up i Down lub podaja konkretna opcje na klawiaturze.)\n");
-		printf("(Akceptacja: W celu zaakceptowania wybranej opcji nacisnij przyciksk MAIN lub ENTER po wpisaniu wartosci na klawiaturze.)\n");
 		for(uint8_t i = 0; i < SETTINGS_NUMBER; i++) {
 			if( currentSetNum != SET_NONE && currentSetNum == (i+1) ) printf("->");		// Active options
 			printf("\t* %s\n", SettingListPtr[i]);
@@ -81,25 +86,49 @@ uint8_t printSettings() {
 		while(1) {
 			if(HAL_GPIO_ReadPin(USER_BTN1_GPIO_Port, USER_BTN1_Pin) == GPIO_PIN_RESET) {
 				if(currentSetNum > 0 && currentSetNum <= SETTINGS_NUMBER) {
-					printf("Wybrane ustawienie: (%u) %s\n", currentSetNum, SettingListPtr[currentSetNum-1]);
+					printf("Selected setting: %u-%s\n", currentSetNum, SettingListPtr[currentSetNum-1]);
 					return currentSetNum;
 				} else {
-					printf("Wybrane ustawienie (%u) jest niepoprawne!\n", currentSetNum);
+					printConsolePostfix(PRI_WARNING);
+					printf("The selected setting [%u] is invalid.\n", currentSetNum);
 					return 0;
 				}
 
 			} else if(HAL_GPIO_ReadPin(GPIOC, USER_BTN_DOWN_Pin) == GPIO_PIN_RESET) {
 //				Set next setting:
 				if(currentSetNum < SETTINGS_NUMBER) currentSetNum++;
-				printf("[DEBUG] %u\n", currentSetNum);
+//				printConsolePostfix(PRI_DEBUG);
+//				printf("%u\n", currentSetNum);
 				break;
 			} else if(HAL_GPIO_ReadPin(GPIOC, USER_BTN_UP_Pin) == GPIO_PIN_RESET) {
 //				Set previous setting:
 				if(currentSetNum > 0) currentSetNum--;
-				printf("[DEBUG] %u\n", currentSetNum);
+//				printConsolePostfix(PRI_DEBUG);
+//				printf("%u\n", currentSetNum);
 				break;
 			}
 		}
 	}
 }
+
+//********************************************************************************************
+// PRIVATE
+//********************************************************************************************
+void printControlInfo(int infoType) {
+	switch(infoType) {
+		case TYPE_OPTIONS:
+			printf("List of available options:\n");
+			break;
+		case TYPE_SETTINGS:
+			printf("List of available settings:\n");
+			break;
+		default:
+			printConsolePostfix(PRI_ERROR);
+			printf("The argument in the function printing option information does not exist.");
+			break;
+	}
+	printf("* To select a specific option, use the Up and Down buttons or enter the number of a specific option using the keyboard.\n");
+	printf("* To confirm the selected option, press the MAIN button or (in the case of a keyboard, confirm the value with the ENTER key)\n");
+}
+
 
