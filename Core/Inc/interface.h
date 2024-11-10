@@ -12,26 +12,29 @@
 #include "stm32l4xx.h"
 #include "gpio.h"
 
-//enum MainOptions {
-//	NONE = 0,
-//	KEYS_LIST,
-//	CHANGE_KEY,
-//	ADD_KEY,
-//	DELETE_KEY,
-//	SETTINGS,
-//	BACK
-//};
-//
-//
-//enum SettingOptions {
-//	SET_NONE = 0,
-//	SET_CHANGE_MODE,
-//	SET_CHANGE_TIME,
-//	SET_CHANGE_TIMEZONE
-//};
+
+typedef enum {
+	NONE = 0,
+	KEYS_LIST,
+	CHANGE_KEY,
+	ADD_KEY,
+	DELETE_KEY,
+	SETTINGS,
+	BACK
+} MainOptions;
+
+
+typedef enum {
+	SET_NONE = 0,
+	SET_CHANGE_MODE,
+	SET_CHANGE_TIME,
+	SET_CHANGE_TIMEZONE,
+	SET_BACK
+} SettingOptions;
 
 
 uint8_t printOptions();
+
 
 uint8_t printSettings();
 

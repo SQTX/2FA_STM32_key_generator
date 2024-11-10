@@ -2,7 +2,7 @@
  * interface.c
  *
  *  Created on: Nov 9, 2024
- *      Author: sqtx
+ *      Author: Jakub SQTX Sitarczyk
  */
 
 #include "interface.h"
@@ -10,39 +10,14 @@
 
 const uint8_t OPTIONS_NUMBER = 6;
 char *OptionsListPtr[] = {"Show keys list", "Change active key", "Add new key", "Delete key", "Settings", "Back"};
-enum MainOptions {
-	NONE = 0,
-	KEYS_LIST,
-	CHANGE_KEY,
-	ADD_KEY,
-	DELETE_KEY,
-	SETTINGS,
-	BACK
-};
 
 const uint8_t SETTINGS_NUMBER = 4;
 char *SettingListPtr[] = {"Change module mode", "Set time", "Set timezone", "Back"};
-enum SettingOptions {
-	SET_NONE = 0,
-	SET_CHANGE_MODE,
-	SET_CHANGE_TIME,
-	SET_CHANGE_TIMEZONE,
-	SET_BACK
-};
 
 
-
-//bool is_button_pressed(void) {
-//  if (HAL_GPIO_ReadPin(USER_BUTTON_GPIO_Port, USER_BUTTON_Pin) == GPIO_PIN_RESET) {
-//    return true;
-//  } else {
-//    return false;
-//  }
-//}
-
-//void switchUp();
-//void switchDown();
-
+//********************************************************************************************
+// PUBLIC
+//********************************************************************************************
 uint8_t printOptions() {
 	uint8_t currentOptNum = {0};
 
@@ -71,13 +46,12 @@ uint8_t printOptions() {
 				}
 
 			} else if(HAL_GPIO_ReadPin(GPIOC, USER_BTN_DOWN_Pin) == GPIO_PIN_RESET) {
-//				switchUp();		// Set next option
-
+//				Set next option:
 				if(currentOptNum < OPTIONS_NUMBER) currentOptNum++;
 				printf("[DEBUG] %u\n", currentOptNum);
 				break;
 			} else if(HAL_GPIO_ReadPin(GPIOC, USER_BTN_UP_Pin) == GPIO_PIN_RESET) {
-//				switchDown();	// Set previous option
+//				Set previous option:
 				if(currentOptNum > 0) currentOptNum--;
 				printf("[DEBUG] %u\n", currentOptNum);
 				break;
@@ -115,10 +89,12 @@ uint8_t printSettings() {
 				}
 
 			} else if(HAL_GPIO_ReadPin(GPIOC, USER_BTN_DOWN_Pin) == GPIO_PIN_RESET) {
+//				Set next setting:
 				if(currentSetNum < SETTINGS_NUMBER) currentSetNum++;
 				printf("[DEBUG] %u\n", currentSetNum);
 				break;
 			} else if(HAL_GPIO_ReadPin(GPIOC, USER_BTN_UP_Pin) == GPIO_PIN_RESET) {
+//				Set previous setting:
 				if(currentSetNum > 0) currentSetNum--;
 				printf("[DEBUG] %u\n", currentSetNum);
 				break;
@@ -126,14 +102,4 @@ uint8_t printSettings() {
 		}
 	}
 }
-
-
-//
-//void switchUp() {
-//
-//}
-//
-//void switchDown() {
-//	currentOptNum--;
-//}
 

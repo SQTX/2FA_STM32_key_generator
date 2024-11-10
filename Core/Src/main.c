@@ -262,39 +262,6 @@ int main(void) {
 //  Get default/last used key from memory
 //  ********************************************************************************************
 	searchAndSetKey(keysNumber, &currentKeyAddr);
-//	uint8_t currentKey[13] = { 0 };		// Container for key from memory
-//	uint8_t currentKeyName[5] = { 0 };	// Container for name from memory
-//	uint8_t data[13 + 5] = { 0 };		// Container for all data from memory
-//
-//	readKeyFromMemory(data, keysNumber, currentKeyAddr, NULL, &currentKeyAddr);
-//
-//	for (int i = 0; i < 13; i++)
-//		currentKey[i] = data[i];			//  Get key from data
-//	for (int i = 0; i < 5; i++)
-//		currentKeyName[i] = data[i + 13];	//  Get name from data
-//
-////  Trim zeros and optimization arrays:
-//	keySize = trimZeros(currentKey, 13);
-//	nameSize = trimZeros(currentKeyName, 5);
-//
-////  Dynamic allocated key array:
-//	key = (uint8_t*) malloc(keySize * sizeof(uint8_t));
-//	for (int i = 0; i < keySize; i++) {
-//		key[i] = currentKey[i];
-//	}
-////  Dynamic allocated name array:
-//	name = (char*) malloc((nameSize + 1) * sizeof(char));
-//	for (int i = 0; i < nameSize; i++) {
-//		name[i] = (char) currentKeyName[i];
-//	}
-//	name[nameSize] = '\0';
-//
-//	printf("Current used key:\t\t['%s']\n", name);// Print current used key name
-////  printf("Key: ");
-////  for(int i = 0; i < 13; i++) printf("%x ", currentKey[i]);
-////  printf("\n");
-//
-//	printf("===========================================================\n");
 
 	/*
 	 //  ********************************************************************************************
@@ -386,96 +353,59 @@ int main(void) {
 				repeat = false;
 				uint8_t option = printOptions();
 
-				if (option != 0) {
+				if (option != NONE) {
 					switch (option) {
-					case 1:
-						showKeysList(keysNumber);
-						break;
-					case 2:
-						uint8_t currentKeyAddr = { 0 };
+						case KEYS_LIST:
+							showKeysList(keysNumber);
+							break;
+						case CHANGE_KEY:
+							uint8_t currentKeyAddr = { 0 };
 
-						searchKey(keysNumber, &currentKeyAddr);
+							searchKey(keysNumber, &currentKeyAddr);
 
-						free(key);
-						free(name);
+							free(key);
+							free(name);
 
-						searchAndSetKey(keysNumber, &currentKeyAddr);
+							searchAndSetKey(keysNumber, &currentKeyAddr);
 
-//						uint8_t currentKey[13] = { 0 };	// Container for key from memory
-//						uint8_t currentKeyName[5] = { 0 };// Container for name from memory
-//						uint8_t data[13 + 5] = { 0 };// Container for all data from memory
-//
-//						readKeyFromMemory(data, keysNumber, currentKeyAddr,
-//								NULL, &currentKeyAddr);
-//
-//						for (int i = 0; i < 13; i++)
-//							currentKey[i] = data[i];	//  Get key from data
-//						for (int i = 0; i < 5; i++)
-//							currentKeyName[i] = data[i + 13];//  Get name from data
-//
-//						//  Trim zeros and optimization arrays:
-//						keySize = trimZeros(currentKey, 13);
-//						nameSize = trimZeros(currentKeyName, 5);
-//
-//						//  Dynamic allocated key array:
-//						key = (uint8_t*) malloc(keySize * sizeof(uint8_t));
-//						for (int i = 0; i < keySize; i++) {
-//							key[i] = currentKey[i];
-//						}
-//						//  Dynamic allocated name array:
-//						name = (char*) malloc((nameSize + 1) * sizeof(char));
-//						for (int i = 0; i < nameSize; i++) {
-//							name[i] = (char) currentKeyName[i];
-//						}
-//						name[nameSize] = '\0';
-//
-//						printf("Current used key:\t\t['%s']\n", name);// Print current used key name
-//						//  printf("Key: ");
-//						//  for(int i = 0; i < 13; i++) printf("%x ", currentKey[i]);
-//						//  printf("\n");
-//
-//						printf(
-//								"===========================================================\n");
+							break;
+						case ADD_KEY:
+							addNewKey(MAX_KEYS, &keysNumber, &generalFlags);
+							break;
+						case DELETE_KEY:
+							deleteKey(&keysNumber);
+							break;
+						case SETTINGS:
+							HAL_Delay(250);
 
-//				  		  TODO: Wpakowac powyzszy kod w funckje
-						break;
-					case 3:
-						addNewKey(MAX_KEYS, &keysNumber, &generalFlags);
-						break;
-					case 4:
-						deleteKey(&keysNumber);
-						break;
-					case 5:
-						HAL_Delay(250);
+							uint8_t setOption = printSettings();
 
-						uint8_t setOption = printSettings();
-
-						if (setOption != 0) {
-							switch (setOption) {
-							case 1:
-								printf("SET MODE\n");
-//				  			  		  TODO: Add function
-								break;
-							case 2:
-								printf("SET TIME\n");
-//				  			  		  TODO: Add function
-								break;
-							case 3:
-								printf("SET TIMEZONE\n");
-//				  			  		  TODO: Add function
-								break;
-							case 4:
-								repeat = true;
-								break;
-							default:
-								break;
+							if (setOption != SET_NONE) {
+								switch (setOption) {
+								case SET_CHANGE_MODE:
+									printf("SET MODE\n");
+	//				  			  		  TODO: Add function
+									break;
+								case SET_CHANGE_TIME:
+									printf("SET TIME\n");
+	//				  			  		  TODO: Add function
+									break;
+								case SET_CHANGE_TIMEZONE:
+									printf("SET TIMEZONE\n");
+	//				  			  		  TODO: Add function
+									break;
+								case SET_BACK:
+									repeat = true;
+									break;
+								default:
+									break;
+								}
 							}
-						}
-						break;
-					case 6:
-						break;
-					default:
-						break;
+							break;
+						case BACK:
+							break;
+						default:
+							break;
 					}
 				}
 			} while (repeat);
