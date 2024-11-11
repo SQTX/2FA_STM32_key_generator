@@ -47,7 +47,9 @@ bool initMemory(uint32_t memorySizeBytes) {
 
 //------ Reading data from memory ------------------------------------------------------------
 void readGeneralDataFromMemory(uint8_t *generalData) {
-	while (eeprom_read(FIRST_MEMORY_ADDR, generalData, GENERAL_DATA_SIZE) != HAL_OK) {}
+	for(uint8_t i = 0; i < GENERAL_DATA_SIZE; i++) {
+		while (eeprom_read(FIRST_MEMORY_ADDR+i, &generalData[i], sizeof(generalData[i])) != HAL_OK) {}
+	}
 }
 
 
@@ -136,8 +138,8 @@ void writeGeneralDataInMemory(uint8_t maxKeys, uint8_t keysNumber, uint8_t lastU
 
 	generalData[5] = flags;		// General data flags
 
-
 	for(int i = 0; i < GENERAL_DATA_SIZE; i++) {
+//		printf("Zapisane zostaly: %x \n", generalData[i]);
 		if(eeprom_write(FIRST_MEMORY_ADDR+i, &generalData[i], sizeof(generalData[i])) != HAL_OK) Error_Handler();
 	}
 }

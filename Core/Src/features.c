@@ -15,11 +15,6 @@ void getKeysNameFromUser(volatile uint32_t *prevWatchDogReset, char*, int);
 // PUBLIC
 //********************************************************************************************
 int8_t addNewKey(volatile uint32_t *prevWatchDogReset, const uint8_t MAX_KEYS, uint8_t* keysNumber, uint8_t* generalFlags, uint8_t* activeKeyAddr) {
-	printf("Chuj: max: %u\n", MAX_KEYS);
-	printf("Chuj: liczba kluczy: %u\n", *keysNumber);
-	printf("Chuj: generalflag: %x\n", *generalFlags);
-	printf("Chuj: aktywne: %x\n", *activeKeyAddr);
-
 //	--------------------------------------------------
 //	Get name and encoded key from user:
 //	--------------------------------------------------
@@ -56,14 +51,11 @@ int8_t addNewKey(volatile uint32_t *prevWatchDogReset, const uint8_t MAX_KEYS, u
 //	--------------------------------------------------
 //	Calc current key index:
 //	--------------------------------------------------
-	printf("Licza kluczy przed indeksowaniem %u\n", *keysNumber);
-
 	uint8_t keyIndex = 0;
 
 	if( (*generalFlags & 0x80) && (*keysNumber == MAX_KEYS) ) {
 		return -1;
 	} else if( (*generalFlags & 0x80) && (*keysNumber < MAX_KEYS) ) {
-		printf("ChujOW\n");
 		bool* owFlagArray = (bool*) malloc( MAX_KEYS * sizeof(bool) );
 
 		getAllOWFlagArr(owFlagArray, MAX_KEYS);
@@ -76,7 +68,6 @@ int8_t addNewKey(volatile uint32_t *prevWatchDogReset, const uint8_t MAX_KEYS, u
 		}
 		free(owFlagArray);
 	}else {
-		printf("Chuj2\n");
 		keyIndex = (*keysNumber)+1;
 	}
 	printf("New key index %u\n", keyIndex);
@@ -107,7 +98,9 @@ int8_t addNewKey(volatile uint32_t *prevWatchDogReset, const uint8_t MAX_KEYS, u
 	uint8_t freeAddr = {0x00};
 	freeAddr = findSpaceForKey(MAX_KEYS, *keysNumber, *generalFlags);
 
-	printf("Next free ADDR: %x\n", freeAddr);
+	*activeKeyAddr = freeAddr;		//	Set new key as active:
+
+	printf("Next free ADDR: %x\n", *activeKeyAddr);
 
 
 //	--------------------------------------------------
@@ -118,22 +111,18 @@ int8_t addNewKey(volatile uint32_t *prevWatchDogReset, const uint8_t MAX_KEYS, u
 	(*keysNumber) += 1;
 	printf("Now keys are: %u\n", *keysNumber);
 
-//	--------------------------------------------------
-//	Set new key as active:
-//	--------------------------------------------------
-	*activeKeyAddr = freeAddr;
 
 //	--------------------------------------------------
 //	Change general data and switch to overwrite mode
 //	--------------------------------------------------
 	if(*generalFlags & 0x80) {		// OW_mode ON
-		writeGeneralDataInMemory(MAX_KEYS, *keysNumber, freeAddr, *generalFlags);
+		writeGeneralDataInMemory(MAX_KEYS, *keysNumber, *activeKeyAddr, *generalFlags);
 	}else {							// OW mode OFF
 		if(*keysNumber == MAX_KEYS) {	// Turn OW_mode ON
 			(*generalFlags) |= 0x80;		// Set OW_flag
-			writeGeneralDataInMemory(MAX_KEYS, *keysNumber, freeAddr, *generalFlags);
+			writeGeneralDataInMemory(MAX_KEYS, *keysNumber, *activeKeyAddr, *generalFlags);
 		}else {							// OW_mode still OFF
-			writeGeneralDataInMemory(MAX_KEYS, *keysNumber, freeAddr, *generalFlags);
+			writeGeneralDataInMemory(MAX_KEYS, *keysNumber, *activeKeyAddr, *generalFlags);
 		}
 	}
 

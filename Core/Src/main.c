@@ -170,7 +170,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   volatile uint32_t prevWatchDogReset = HAL_GetTick();
 
-  resetMemoryTest();		// TEST FUNCTION
+//  resetMemoryTest();		// TEST FUNCTION
 //  addKeyTest();			// TEST FUNCTION
 
 	printStartInfo();
@@ -226,7 +226,17 @@ int main(void)
 //	********************************************************************************************
 //	Initial add first key
 //	********************************************************************************************
-	if(missingKey) addNewKey(&prevWatchDogReset, MAX_KEYS, &keysNumber, &generalFlags, &currentKeyAddr);
+	if(missingKey) {
+		addNewKey(&prevWatchDogReset, MAX_KEYS, &keysNumber, &generalFlags, &currentKeyAddr);
+		keysNumber = 1;
+		currentKeyAddr = 0x06;
+
+		printSubTitle("After add first key:");
+		printf("Maximum keys in memory:\t\t[%u]\n", MAX_KEYS);
+		printf("Current number of keys:\t\t[%u]\n", keysNumber);
+		printf("New key address:\t\t[%x]\n", currentKeyAddr);
+	}
+
 
 //  ********************************************************************************************
 //  Get default/last used key from memory
