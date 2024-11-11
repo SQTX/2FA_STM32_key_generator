@@ -14,7 +14,12 @@ void getKeysNameFromUser(volatile uint32_t *prevWatchDogReset, char*, int);
 //********************************************************************************************
 // PUBLIC
 //********************************************************************************************
-int8_t addNewKey(volatile uint32_t *prevWatchDogReset, const uint8_t MAX_KEYS, uint8_t* keysNumber, uint8_t* generalFlags) {
+int8_t addNewKey(volatile uint32_t *prevWatchDogReset, const uint8_t MAX_KEYS, uint8_t* keysNumber, uint8_t* generalFlags, uint8_t* activeKeyAddr) {
+	printf("Chuj: max: %u\n", MAX_KEYS);
+	printf("Chuj: liczba kluczy: %u\n", *keysNumber);
+	printf("Chuj: generalflag: %x\n", *generalFlags);
+	printf("Chuj: aktywne: %x\n", *activeKeyAddr);
+
 //	--------------------------------------------------
 //	Get name and encoded key from user:
 //	--------------------------------------------------
@@ -51,11 +56,14 @@ int8_t addNewKey(volatile uint32_t *prevWatchDogReset, const uint8_t MAX_KEYS, u
 //	--------------------------------------------------
 //	Calc current key index:
 //	--------------------------------------------------
+	printf("Licza kluczy przed indeksowaniem %u\n", *keysNumber);
+
 	uint8_t keyIndex = 0;
 
 	if( (*generalFlags & 0x80) && (*keysNumber == MAX_KEYS) ) {
 		return -1;
 	} else if( (*generalFlags & 0x80) && (*keysNumber < MAX_KEYS) ) {
+		printf("ChujOW\n");
 		bool* owFlagArray = (bool*) malloc( MAX_KEYS * sizeof(bool) );
 
 		getAllOWFlagArr(owFlagArray, MAX_KEYS);
@@ -66,7 +74,9 @@ int8_t addNewKey(volatile uint32_t *prevWatchDogReset, const uint8_t MAX_KEYS, u
 				break;
 			}
 		}
+		free(owFlagArray);
 	}else {
+		printf("Chuj2\n");
 		keyIndex = (*keysNumber)+1;
 	}
 	printf("New key index %u\n", keyIndex);
@@ -108,17 +118,21 @@ int8_t addNewKey(volatile uint32_t *prevWatchDogReset, const uint8_t MAX_KEYS, u
 	(*keysNumber) += 1;
 	printf("Now keys are: %u\n", *keysNumber);
 
+//	--------------------------------------------------
+//	Set new key as active:
+//	--------------------------------------------------
+	*activeKeyAddr = freeAddr;
 
 //	--------------------------------------------------
 //	Change general data and switch to overwrite mode
 //	--------------------------------------------------
 	if(*generalFlags & 0x80) {		// OW_mode ON
-		writeGeneralDataInMemory(MAX_KEYS, *keysNumber, freeAddr, 0x80);
+		writeGeneralDataInMemory(MAX_KEYS, *keysNumber, freeAddr, *generalFlags);
 	}else {							// OW mode OFF
 		if(*keysNumber == MAX_KEYS) {	// Turn OW_mode ON
-			writeGeneralDataInMemory(MAX_KEYS, *keysNumber, freeAddr, 0x80);
-		}else {							// OW_mode still OFF
 			(*generalFlags) |= 0x80;		// Set OW_flag
+			writeGeneralDataInMemory(MAX_KEYS, *keysNumber, freeAddr, *generalFlags);
+		}else {							// OW_mode still OFF
 			writeGeneralDataInMemory(MAX_KEYS, *keysNumber, freeAddr, *generalFlags);
 		}
 	}
@@ -176,7 +190,7 @@ int8_t searchKey(volatile uint32_t *prevWatchDogReset, uint8_t keysNumber, uint8
 }
 
 
-int8_t deleteKey(volatile uint32_t *prevWatchDogReset, uint8_t* keysNumber) {
+int8_t deleteKey(volatile uint32_t *prevWatchDogReset, const uint8_t MAX_KEYS, uint8_t* keysNumber, uint8_t* generalFlags, uint8_t* activeKeyAddr) {
 	//	--------------------------------------------------
 	//	Get key's name from user:
 	//	--------------------------------------------------
@@ -194,18 +208,37 @@ int8_t deleteKey(volatile uint32_t *prevWatchDogReset, uint8_t* keysNumber) {
 
 		int8_t status = readKeyFromMemory(data, *keysNumber, NOT_USE_ADDR, name, &wantedAddr);
 
+
+	//	--------------------------------------------------
+	//	If key is active change it
+	//	--------------------------------------------------
+		if(*activeKeyAddr == wantedAddr) {
+			printConsolePostfix(PRI_INFO);
+			printf("Aktywny klucz zostal usuniety. Nastapial zmiana aktywnego klucza.\n");
+
+			*activeKeyAddr = FIRST_KEY_ADDR;	// NOTE: Hardcoded address to first key in memory
+//			TODO: Here there should be an algorithm that searches the memory for another available key.
+//			TODO: If there are no keys in memory, a function should be called to add them
+		}
+
 	//	--------------------------------------------------
 	//	Set OW flag and change value of keys:
 	//	--------------------------------------------------
 		if(status == 0) {
 			setOWFlag(wantedAddr);
-			printf("[INFO] Podany klucz zostal usuniety\n");
+			printConsolePostfix(PRI_INFO);
+			printf("Podany klucz zostal usuniety\n");
+
+//			Update general data:
 			(*keysNumber) -= 1;
+			writeGeneralDataInMemory(MAX_KEYS, *keysNumber, *activeKeyAddr, *generalFlags);
 			return 0;
 		} else if(status == 1) {
+			printConsolePostfix(PRI_WARNING);
 			printf("Podana nazwa nie istnieje w bazie kluczy\n");
 			return 1;
 		} else {
+			printConsolePostfix(PRI_ERROR);
 			printf("Something wrong\n");
 			return -1;
 		}
