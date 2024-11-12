@@ -19,7 +19,8 @@ int8_t base32ToHex(const char *encoded, const uint8_t encodedLength, uint8_t **d
 
 //	Check if malloc was successful and cleaning
 	if (*decoded == NULL) {
-		printf("[ERROR] Failed to allocate memory.\n");
+		printConsolePostfix(PRI_ERROR);
+		printf("Failed to allocate memory.\n");
 	    return -1;  // ERROR
 	} else {
 		for (int i = 0; i < (decodedLength+1); i++) (*decoded)[i] = 0;
@@ -30,7 +31,8 @@ int8_t base32ToHex(const char *encoded, const uint8_t encodedLength, uint8_t **d
 
 
     if (decodedSize < 0) {
-        printf("[ERROR] Decoding error\n");
+    	printConsolePostfix(PRI_ERROR);
+        printf("Decoding error\n");
         return -1;  // ERROR
     } else if (decodedSize == decodedLength){
     	return decodedSize;
@@ -42,11 +44,11 @@ int8_t base32ToHex(const char *encoded, const uint8_t encodedLength, uint8_t **d
 uint8_t trimZeros(uint8_t* arr, uint8_t length) {
 	uint8_t new_length = length;
 
-    // Iteruj od końca, aż napotkasz niezerowy element
+//	Iterate backwards until you encounter a non-zero element
     while (new_length > 0 && arr[new_length - 1] == 0) {
-        new_length--; // Zmniejsz nową długość tablicy
+        new_length--; // Decrease array length
     }
 
-    return new_length; // Zwróć nową długość bez końcowych zer
+    return new_length; 	// New length without zeros
 }
 

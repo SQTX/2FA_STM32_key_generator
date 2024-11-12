@@ -70,7 +70,8 @@ int8_t getStringViaKeyboard(uint8_t valueChar, char* stringContainer, uint8_t st
 	} else {
 //		If the data exceeds the specified limit, it is deleted
 		if (line_length >= MAX_STRING_LENGTH || line_length >= stringLenght) {
-			printf("[WARNING] The received string of characters exceeds the allowed limit\n");
+			printConsolePostfix(PRI_WARNING);
+			printf("The received string of characters exceeds the allowed limit\n");
 			line_length = 0;
 			return -1;			// ERROR
 		}
@@ -132,6 +133,7 @@ void splitDateTime(char *input, char *date, char *time) {
 //      Copying time (everything after comma).
         strcpy(time, (comma + 1));
     } else {
-        printf("[ERROR] Date and time assigned inconsistently with pattern\n");	// If comma is not found, we print error.
+    	printConsolePostfix(PRI_ERROR);
+        printf("Date and time assigned inconsistently with pattern\n");	// If comma is not found, we print error.
     }
 }

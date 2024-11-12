@@ -297,7 +297,7 @@ void setOWFlag(const uint8_t ADDR) {
 
 
 //********************************************************************************************
-// TEST
+// TEST - functions used for testing. DO NOT USE
 //********************************************************************************************
 void resetMemoryTest() {
 	uint8_t foo = 0x00;
@@ -318,12 +318,15 @@ void addKeyTest() {
 //********************************************************************************************
 // PRIVATE
 //********************************************************************************************
+/**
+ * Function comparing 2 arrays (first is of type char, second is uint8_t).
+ */
 bool compareArrays(const char* array1, const uint8_t* array2, size_t length) {
     for (size_t i = 0; i < length; i++) {
 //    	printf("%c (%x) == %c (%x)\n", array1[i], array1[i], array2[i], array2[i]);
         if ((uint8_t)array1[i] != array2[i]) {
-            return false;  // Zwróć false, jeśli elementy są różne
+            return false;  // False - if elements are different
         }
     }
-    return true;  // Zwróć true, jeśli wszystkie elementy są równe
+    return true;  // True - if elements are the same
 }

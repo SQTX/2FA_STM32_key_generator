@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "usart.h"
+#include "iwdg.h"
 #include "rtc.h"
 #include "stm32l4xx.h"
 #include "dataFromUser.h"

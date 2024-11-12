@@ -33,14 +33,14 @@ int8_t addNewKey(volatile uint32_t *prevWatchDogReset, const uint8_t MAX_KEYS, u
 	printf("Name size: %u\n", keysNameSize);
 	const uint8_t encodedSize = trimZeros((uint8_t*)encodedKey, MAX_ENCODED_KEY_SIZE+1);
 	const uint8_t decodedSize = UNBASE32_LEN(encodedSize);
-	printf("Size przed: %u\n", encodedSize);
-	printf("Size po: %u\n", decodedSize);
+//	printf("Size przed: %u\n", encodedSize);
+//	printf("Size po: %u\n", decodedSize);
 
 	const int keySize = base32_decode(encodedKey, key, decodedSize);
 
 	if(decodedSize == keySize) {
 		printf("Token size: %u\n", keySize);
-		printf("Dekodowany tekst: ");
+		printf("Decoded key: ");
 		for (int i = 0; i < keySize; i++) {
 //			printf("%c", key[i]);
 		    printf("0x%x ", key[i]);
@@ -115,13 +115,13 @@ int8_t addNewKey(volatile uint32_t *prevWatchDogReset, const uint8_t MAX_KEYS, u
 //	--------------------------------------------------
 //	Change general data and switch to overwrite mode
 //	--------------------------------------------------
-	if(*generalFlags & 0x80) {		// OW_mode ON
+	if(*generalFlags & 0x80) {				// OW_mode ON
 		writeGeneralDataInMemory(MAX_KEYS, *keysNumber, *activeKeyAddr, *generalFlags);
-	}else {							// OW mode OFF
-		if(*keysNumber == MAX_KEYS) {	// Turn OW_mode ON
+	}else {									// OW mode OFF
+		if(*keysNumber == MAX_KEYS) {		// Turn OW_mode ON
 			(*generalFlags) |= 0x80;		// Set OW_flag
 			writeGeneralDataInMemory(MAX_KEYS, *keysNumber, *activeKeyAddr, *generalFlags);
-		}else {							// OW_mode still OFF
+		}else {								// OW_mode still OFF
 			writeGeneralDataInMemory(MAX_KEYS, *keysNumber, *activeKeyAddr, *generalFlags);
 		}
 	}
@@ -154,9 +154,9 @@ int8_t searchKey(volatile uint32_t *prevWatchDogReset, uint8_t keysNumber, uint8
 		for(int i = 0; i < 13; i++) currentKey[i] = data[i];			//  Get key from data
 		for(int i = 0; i < 5; i++) currentKeyName[i] = data[i+13];	//  Get name from data
 
-		printf("--------------------------\n");
+		printLineSeparator('-');
 		printf("THE KEY HAS BEEN FOUND!\n");
-		printf("--------------------------\n");
+		printLineSeparator('-');
 		printf("Name:\t\t%s\n", currentKeyName);
 		printf("Key:\t\t");
 		for (int i = 0; i < 10; i++) {
@@ -164,16 +164,18 @@ int8_t searchKey(volatile uint32_t *prevWatchDogReset, uint8_t keysNumber, uint8
 		}
 		printf("\n");
 		printf("Address:\t0x%x\n", wantedAddr);
-		printf("--------------------------\n");
+		printLineSeparator('-');
 
 		*keyAddr = wantedAddr;
 
 		return 0;
 	} else if(status == 1) {
-		printf("[INFO]\tThe entered name does not exist in the key database\n");
+		printConsolePostfix(PRI_INFO);
+		printf("\tThe entered name does not exist in the memory\n");
 		return 1;
 	} else {
-		printf("[ERROR]\tSomething wrong\n");
+		printConsolePostfix(PRI_ERROR);
+		printf("\tSomething wrong\n");
 		return -1;
 	}
 }
@@ -192,7 +194,6 @@ int8_t deleteKey(volatile uint32_t *prevWatchDogReset, const uint8_t MAX_KEYS, u
 	//	--------------------------------------------------
 		const uint8_t NOT_USE_ADDR = 0x00;
 		uint8_t wantedAddr = 0x00;
-
 		uint8_t data[13+5] = {0};			// Container for all data from memory
 
 		int8_t status = readKeyFromMemory(data, *keysNumber, NOT_USE_ADDR, name, &wantedAddr);
@@ -203,7 +204,7 @@ int8_t deleteKey(volatile uint32_t *prevWatchDogReset, const uint8_t MAX_KEYS, u
 	//	--------------------------------------------------
 		if(*activeKeyAddr == wantedAddr) {
 			printConsolePostfix(PRI_INFO);
-			printf("Aktywny klucz zostal usuniety. Nastapial zmiana aktywnego klucza.\n");
+			printf("The active key has been deleted. The active key has changed\n");
 
 			*activeKeyAddr = FIRST_KEY_ADDR;	// NOTE: Hardcoded address to first key in memory
 //			TODO: Here there should be an algorithm that searches the memory for another available key.
@@ -216,7 +217,7 @@ int8_t deleteKey(volatile uint32_t *prevWatchDogReset, const uint8_t MAX_KEYS, u
 		if(status == 0) {
 			setOWFlag(wantedAddr);
 			printConsolePostfix(PRI_INFO);
-			printf("Podany klucz zostal usuniety\n");
+			printf("The provided key has been deleted\n");
 
 //			Update general data:
 			(*keysNumber) -= 1;
@@ -224,7 +225,7 @@ int8_t deleteKey(volatile uint32_t *prevWatchDogReset, const uint8_t MAX_KEYS, u
 			return 0;
 		} else if(status == 1) {
 			printConsolePostfix(PRI_WARNING);
-			printf("Podana nazwa nie istnieje w bazie kluczy\n");
+			printf("The specified name does not exist in the key database\n");
 			return 1;
 		} else {
 			printConsolePostfix(PRI_ERROR);
@@ -237,28 +238,28 @@ int8_t deleteKey(volatile uint32_t *prevWatchDogReset, const uint8_t MAX_KEYS, u
 void showKeysList(uint8_t keysNumber) {
 	fflush(stdout);
 
-    // Tworzymy dynamiczną tablicę wskaźników na stringi
+//	Create a dynamic array of string pointers:
     char** wordsArray = malloc(keysNumber * sizeof(char*));
     if (wordsArray == NULL) {
-        fprintf(stderr, "Błąd alokacji pamięci!\n");
+        fprintf(stderr, "Memory allocation error!\n");
         return;
     }
 
-    // Przypisujemy słowa do tablicy
+//  Assign words to the board:
     getAllNames(wordsArray, keysNumber);
 
-    // Wyświetlamy słowa
+//	Display words:
     printf("Keys number: %u\n", keysNumber);
     printf("Keys list:\n");
     for (int i = 0; i < keysNumber; i++) {
         printf("- %s\n", wordsArray[i]);
     }
 
-    // Zwalniamy pamięć
+//  Free memory up:
     for (int i = 0; i < keysNumber; i++) {
-        free(wordsArray[i]); // Zwalniamy pamięć zajmowaną przez stringi
+        free(wordsArray[i]); 	// Free the memory occupied by strings
     }
-    free(wordsArray); // Zwalniamy pamięć zajmowaną przez tablicę wskaźników
+    free(wordsArray); 			// Free the memory occupied by the pointer array
     fflush(stdout);
 }
 

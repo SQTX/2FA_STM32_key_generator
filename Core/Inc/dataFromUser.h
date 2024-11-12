@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-
+#include "printer.h"
 
 #define DATATIME_MAX_LENGTH		21		// DD-MM-YYYY,hh:mm:ss`\n``\r`
 #define MAX_STRING_LENGTH		22

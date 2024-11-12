@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "base32.h"
+#include "printer.h"
 
 
 /**

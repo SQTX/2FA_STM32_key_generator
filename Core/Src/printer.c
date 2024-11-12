@@ -50,20 +50,20 @@ void clearTerminal() {
 void printTitle(const char *str) {
 	printLineSeparator('=');
     while (*str) {
-        putchar(toupper(*str));  // Konwertuje i drukuje każdy znak jako wielką literę
+        putchar(toupper(*str));  // Convert and print all char like upper case
         str++;
     }
-    putchar('\n');  // Przejście do nowej linii po wydrukowaniu całego ciągu
+    putchar('\n');
     printLineSeparator('=');
 }
 
 void printSubTitle(const char *str) {
 	printLineSeparator('-');
     while (*str) {
-        putchar(*str);  // Konwertuje i drukuje każdy znak jako wielką literę
+        putchar(*str);  		// Print single char
         str++;
     }
-    putchar('\n');  // Przejście do nowej linii po wydrukowaniu całego ciągu
+    putchar('\n');
     printLineSeparator('-');
 }
 
@@ -81,6 +81,7 @@ void printStartInfo() {
 // PRIVATE
 //********************************************************************************************
 void printAsciiArt() {
+//	Pattern:
 //	  ____  _____ _      ____ _____ __  __   _  _________   __   ____ _____ _   _
 //	 |___ \|  ___/ \    / ___|_   _|  \/  | | |/ | ____\ \ / /  / ___| ____| \ | |
 //	   __) | |_ / _ \   \___ \ | | | |\/| | | ' /|  _|  \ V /  | |  _|  _| |  \| |
