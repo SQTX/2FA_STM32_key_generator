@@ -8,13 +8,16 @@
 #ifndef INC_CLOCKCONTROL_H_
 #define INC_CLOCKCONTROL_H_
 
+//Std:
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+//Stm:
+#include "stm32l4xx.h"
 #include "usart.h"
 #include "iwdg.h"
 #include "rtc.h"
-#include "stm32l4xx.h"
+//My:
 #include "dataFromUser.h"
 
 
@@ -81,6 +84,23 @@ uint32_t getTimeStamp(RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr);
 void printLocalTime(RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr);
 
 
+/**
+ * @brief Prompts the user to enter the current date and time, then sets the RTC with the provided values.
+ *
+ * This function interacts with the user over UART, prompting them to enter the current date and time
+ * in the format [DD-MM-YYYY,hh:mm:ss]. It continuously resets the watchdog timer to prevent system reset
+ * during user input. Once the input is received, the time is converted to UTC based on the defined timezone
+ * offset, and the Real-Time Clock (RTC) is set with the parsed values.
+ *
+ * @param[in,out] prevWatchDogReset Pointer to the watchdog reset counter, updated periodically to prevent reset.
+ * @param[out] rtcTimePtr           Pointer to the RTC structure for time, updated with user-provided time values.
+ * @param[out] rtcDatePtr           Pointer to the RTC structure for date, updated with user-provided date values.
+ *
+ * @note The function waits for the user input over UART and may block until a complete and valid time is provided.
+ *       The `TIMEZONE` constant is used to adjust the entered time to UTC.
+ *
+ * @warning Ensure that the watchdog reset is handled correctly to prevent unintended system reset during input.
+ */
 void getTimeFromUser(volatile uint32_t *prevWatchDogReset, RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr);
 
 

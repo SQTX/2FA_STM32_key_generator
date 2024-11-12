@@ -267,6 +267,9 @@ void showKeysList(uint8_t keysNumber) {
 //********************************************************************************************
 // PRIVATE
 //********************************************************************************************
+/**
+ * A function that receives a BASE32-encoded key from the user in the form of a string
+ */
 void getEncodedKeyFromUser(volatile uint32_t *prevWatchDogReset, char* encodedKey, int printIt) {
 	uint8_t status = {1};
 
@@ -298,6 +301,9 @@ void getEncodedKeyFromUser(volatile uint32_t *prevWatchDogReset, char* encodedKe
 }
 
 
+/**
+ * A function that receives a key's name from the user in the form of a string
+ */
 void getKeysNameFromUser(volatile uint32_t *prevWatchDogReset, char* name, int printIt) {
 	uint8_t status = {1};
 

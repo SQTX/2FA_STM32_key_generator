@@ -47,6 +47,7 @@ void clearTerminal() {
 	for(int i = 0; i < NEW_LINE_NUMBERS; i++) printf("\n");
 }
 
+
 void printTitle(const char *str) {
 	printLineSeparator('=');
     while (*str) {
@@ -57,6 +58,7 @@ void printTitle(const char *str) {
     printLineSeparator('=');
 }
 
+
 void printSubTitle(const char *str) {
 	printLineSeparator('-');
     while (*str) {
@@ -66,6 +68,7 @@ void printSubTitle(const char *str) {
     putchar('\n');
     printLineSeparator('-');
 }
+
 
 void printStartInfo() {
 	clearTerminal();
@@ -80,6 +83,9 @@ void printStartInfo() {
 //********************************************************************************************
 // PRIVATE
 //********************************************************************************************
+/**
+ * Function that prints the project logo in ASCII ART form.
+ */
 void printAsciiArt() {
 //	Pattern:
 //	  ____  _____ _      ____ _____ __  __   _  _________   __   ____ _____ _   _
@@ -97,6 +103,9 @@ void printAsciiArt() {
 }
 
 
+/**
+ * Function that prints the project license.
+ */
 void printLicense() {
     printf("MIT License\n\n");
     printf("Copyright (c) 2024 Jakub SQTX Sitarczyk\n\n");

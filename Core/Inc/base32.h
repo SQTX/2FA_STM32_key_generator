@@ -8,6 +8,7 @@
 #ifndef INC_BASE32_H_
 #define INC_BASE32_H_
 
+//Std:
 #include <stdint.h>
 #include <string.h>
 #include <stdint.h>

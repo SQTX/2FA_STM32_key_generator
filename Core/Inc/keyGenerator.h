@@ -8,10 +8,11 @@
 #ifndef INC_KEYGENERATOR_H_
 #define INC_KEYGENERATOR_H_
 
+//Std:
 #include <stdio.h>
 #include <stdlib.h>
+//My:
 #include "TOTP.h"
-
 
 #define TOTP_TIMESTEP 30
 

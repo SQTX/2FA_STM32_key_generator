@@ -8,9 +8,11 @@
 #ifndef INC_DATACONVERTER_H_
 #define INC_DATACONVERTER_H_
 
+//Std:
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+//My:
 #include "base32.h"
 #include "printer.h"
 
@@ -37,6 +39,7 @@
  *          @p encodedLength is correct. Incorrect input may result in decoding errors.
  */
 int8_t base32ToHex(const char *encoded, const uint8_t encodedLength, uint8_t **decoded);
+
 
 /**
  * @brief Trims trailing zeros from an array.
