@@ -18,12 +18,18 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "crc.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
+#include "dataConverter.h"
+#include "keyGenerator.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -88,8 +94,66 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
+  MX_CRC_Init();
   /* USER CODE BEGIN 2 */
-  printf("Hello World!\n");
+//  ************************************************************************
+//  Stale:
+//  const uint32_t TOTP_TIMESTAMP = 30;
+//  const uint32_t EPOCH_TIMESTAMP = 1557414000;	// Hard coded Timestamp
+  const int8_t TIMEZONE = 2;		// In Poland: UTC+2h (local_time_hour - 2h)
+
+//  ************************************************************************
+//  Pobranie czasu:
+  struct tm datetime;
+//  27.09.2024 - 16:35:00
+//  datetime.tm_hour = 16;      	// Moja godzina
+//  datetime.tm_min = 35;           // Moja minut
+//  datetime.tm_sec = 0;            // Moja sekunda
+//  datetime.tm_mday = 27;          // Mój dzień
+//  datetime.tm_mon = (9-1);        // Mój miesiąc -1m
+//  datetime.tm_year = (2024-1900); // Mój rok -1900y
+
+//  Current hard coded time:
+  datetime.tm_hour = (15 - TIMEZONE);  // Moja godzina
+  datetime.tm_min = 49;          	 // Moja minut
+  datetime.tm_sec = 0;           	 // Moja sekunda
+  datetime.tm_mday = 13;         	 // Mój dzień
+  datetime.tm_mon = (10-1);       	 // Mój miesiąc -1m
+  datetime.tm_year = (2024-1900); 	 // Mój rok -1900y
+
+    time_t t = mktime(&datetime);   					// Convert datatime to timestamp
+    const uint32_t EPOCH_TIMESTAMP = (uint32_t) t;		// Casting from time_t to uint32
+    printf("Epoch timestamp: %ld\n", EPOCH_TIMESTAMP);
+
+//  ************************************************************************
+//  Conversion Encoded key to normal key
+//  ************************************************************************
+//	const char encoded[] = "JV4UYZLHN5CG633S";		// Encoded key is a word
+	const char encoded[] = "JBSWY3DPEHPK3PXP";		// Encoded key isn't a word
+	uint8_t encodedLength = {(sizeof encoded)-1};	// Encoded key length (without '\n')
+	printf("Code: %s\t| Size: %u\n", encoded, encodedLength);
+
+
+	uint8_t *key = NULL;
+	uint8_t keySize = base32ToHex(encoded, encodedLength, &key);
+	if(key == NULL) printf("[ERROR] Failed to allocate memory.\n");
+
+
+	printf("Token size: %u\n", keySize);
+	printf("Dekodowany tekst: ");
+	for (int i = 0; i < keySize; i++) {
+//		printf("%c", key[i]);
+	    printf("0x%x ", key[i]);
+	}
+	printf("\n");
+
+//  ************************************************************************
+//  Generate TOTP TOKEN
+//  ************************************************************************
+    uint32_t token = generateToken(key, keySize, EPOCH_TIMESTAMP);
+    free(key);
+    printf("Code:\t\t%lu\n", token);
+//  ************************************************************************
   /* USER CODE END 2 */
 
   /* Infinite loop */
