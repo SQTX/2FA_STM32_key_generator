@@ -37,4 +37,22 @@
  */
 int8_t base32ToHex(const char *encoded, const uint8_t encodedLength, uint8_t **decoded);
 
+/**
+ * @brief Trims trailing zeros from an array.
+ *
+ * This function iterates through an array from the end and decreases the length
+ * until a non-zero element is encountered. The function effectively removes any
+ * trailing zeros from the array and returns the new length of the array.
+ *
+ * @param[in] arr     Pointer to the array of unsigned 8-bit integers to be trimmed.
+ * @param[in] length  The original length of the array.
+ *
+ * @return Returns the new length of the array after trimming trailing zeros.
+ *         If all elements are zeros, it returns 0.
+ *
+ * @note The original array is not modified; only the returned length indicates
+ *       how many elements remain before the trailing zeros.
+ */
+uint8_t trimZeros(uint8_t* arr, uint8_t length);
+
 #endif /* INC_DATACONVERTER_H_ */

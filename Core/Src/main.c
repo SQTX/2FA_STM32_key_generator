@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "crc.h"
+#include "i2c.h"
 #include "rtc.h"
 #include "usart.h"
 #include "gpio.h"
@@ -29,11 +30,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <stdbool.h>
 //My:
 #include "clockControl.h"
 #include "dataConverter.h"
 #include "keyGenerator.h"
 #include "dataFromUser.h"
+#include "eeprom.h"
+#include "memoryController.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -71,7 +75,7 @@ typedef struct tm DateTime_t;
 //CONSTS
 //********************************************************************************************
 //const char encoded[] = {"JV4UYZLHN5CG633S"};	// Encoded key is a word
-const char encodedKey[] = {"JBSWY3DPEHPK3PXP"};	// Encoded key isn't a word
+//const char encodedKey[] = {"JBSWY3DPEHPK3PXP"};	// Encoded key isn't a word
 
 
 //********************************************************************************************
@@ -79,6 +83,11 @@ const char encodedKey[] = {"JBSWY3DPEHPK3PXP"};	// Encoded key isn't a word
 //********************************************************************************************
 RTC_TimeTypeDef rtcTime = {0};
 RTC_DateTypeDef rtcDate = {0};
+
+uint8_t* key = {NULL};
+char* name = {NULL};
+uint8_t keySize = {0};
+uint8_t nameSize = {0};
 
 
 //********************************************************************************************
@@ -153,14 +162,94 @@ int main(void)
   MX_USART2_UART_Init();
   MX_CRC_Init();
   MX_RTC_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
+//  resetMemoryTest();		// TEST FUNCTION
+//  addKeyTest();			// TEST FUNCTION
+
+  printf("===========================================================\n");
+  printf("Device initialization process\n");
+  printf("-----------------------------------------------------------\n");
+//  ********************************************************************************************
+//  Initializing the Memory
+//  ********************************************************************************************
+  if(checkMemory()){
+	  printf("Memory status\t\t\t[OK]\n");
+  } else {
+	  printf("Memory status\t\t\t[WRONG]\n");
+	  printf("Memory initializing...\n");
+	  if(initMemory(128)){
+		  printf("Memory initialize\t\t[OK]\n");
+//		  TODO: ADD NEW, first KEY
+	  } else {
+		  printf("Memory initialize\t\t[ERROR]\n");
+	  }
+  }
+
 //  ********************************************************************************************
 //  Initializing the RTC clock
 //  ********************************************************************************************
-  printf("-----------------------------------------------------------\n");
-  initClockRTC(&rtcTime, &rtcDate);										// Initializing the RTC clock
-  printf("Epoch TimeStamp: %ld\n", getTimeStamp(&rtcTime, &rtcDate));	// Show current epoch timestamp
+  initClockRTC(&rtcTime, &rtcDate);											// Initializing the RTC clock
 
+
+//  ********************************************************************************************
+//  Get general data from memory
+//  ********************************************************************************************
+  uint8_t generalData[6] = {0};
+  readGeneralDataFromMemory(generalData);
+
+  const uint8_t MAX_KEYS = generalData[2];
+  uint8_t keysNumber = generalData[3];
+  uint8_t currentKeyAddr = generalData[4];
+
+  printf("-----------------------------------------------------------\n");
+  printf("General information: \n");
+  printf("-----------------------------------------------------------\n");
+  printLocalTime(&rtcTime, &rtcDate);
+  printf("Epoch TimeStamp:\t\t[%ld]\n", getTimeStamp(&rtcTime, &rtcDate));	// Show current epoch TimeStamp
+  printf("Maximum keys in memory:\t\t[%u]\n", MAX_KEYS);
+  printf("Current number of keys:\t\t[%u]\n", keysNumber);
+
+
+//  ********************************************************************************************
+//  Get default/last used key from memory
+//  ********************************************************************************************
+  uint8_t currentKey[13] = {0};		// Container for key from memory
+  uint8_t currentKeyName[5] = {0};	// Container for name from memory
+  uint8_t data[13+5] = {0};			// Container for all data from memory
+
+  readKeyFromMemory(data, keysNumber, currentKeyAddr, NULL);
+
+
+  for(int i = 0; i < 13; i++) currentKey[i] = data[i];			//  Get key from data
+  for(int i = 0; i < 5; i++) currentKeyName[i] = data[i+13];	//  Get name from data
+
+
+//  Trim zeros and optimization arrays:
+  keySize = trimZeros(currentKey, 13);
+  nameSize = trimZeros(currentKeyName, 5);
+
+//  Dynamic allocated key array:
+  key = (uint8_t*) malloc( keySize * sizeof(uint8_t) );
+  for(int i = 0; i < keySize; i++) {
+	  key[i] = currentKey[i];
+  }
+//  Dynamic allocated name array:
+  name = (char*) malloc( (nameSize+1) * sizeof(char) );
+  for(int i = 0; i < nameSize; i++) {
+	  name[i] = (char)currentKeyName[i];
+  }
+  name[nameSize] = '\0';
+
+
+  printf("Current used key:\t\t['%s']\n", name);				// Print current used key name
+//  printf("Key: ");
+//  for(int i = 0; i < 13; i++) printf("%x ", currentKey[i]);
+//  printf("\n");
+
+  printf("===========================================================\n");
+
+  /*
 //  ********************************************************************************************
 //  Conversion Encoded key to normal key
 //  ********************************************************************************************
@@ -180,12 +269,12 @@ int main(void)
 	    printf("0x%x ", key[i]);
 	}
 	printf("\n");
-//  ********************************************************************************************
+*/
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  printf("-----------------------------------------------------------\n");
+//  printf("-----------------------------------------------------------\n");
 
   while (1)
   {
@@ -194,7 +283,7 @@ int main(void)
 //	  ********************************************************************************************
 //	  TODO: Use an interrupt
 	  uint32_t token = {generateToken(key, keySize, getTimeStamp(&rtcTime, &rtcDate))};	// Generate TOTP token
-	  printf("Code:\t\t%06lu\n", token);
+	  printf("Token:\t\t[%06lu]\n", token);
 
 
 	  HAL_RTC_GetDate(&hrtc, &rtcDate, RTC_FORMAT_BIN);
@@ -218,6 +307,7 @@ int main(void)
     /* USER CODE BEGIN 3 */
   }
   free(key);
+  free(name);
   /* USER CODE END 3 */
 }
 
