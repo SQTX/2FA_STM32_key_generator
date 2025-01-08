@@ -8,8 +8,9 @@
 #ifndef INC_MEMORYCONTROLLER_H_
 #define INC_MEMORYCONTROLLER_H_
 
-#include "eeprom.h"
 #include <stdbool.h>
+#include "eeprom.h"
+#include "dataConverter.h"
 
 
 #define INIT_BYTE 			0xCA		// CONST first inital byte (0b11001010)
@@ -17,18 +18,21 @@
 #define FIRST_KEY_ADDR		0x06		// 6 	- First address for key in memory
 #define LAST_MEMORY_ADDR 	0x7F		// 127 	- Last address in memory
 
-//+------------------------------------------------------------------------------------------+
-//|										General Data [6 Bytes]			  					 |
-//+------------+------------------+----------+-------------+--------------------+------------+
-//| Init Byte  | Last memory ADDR | Max keys | Kesy number | Last used key ADDR | Free Space |
-//+------------+------------------+----------+-------------+--------------------+------------+
-//| 0b11001010 | HEX ADDR         | 0-255    | 0-255       | HEX ADDR           | ...        |
-//| 1Byte      | 1Byte            | 1Byte    | 1Byte       | 1Byte              | 1Byte      |
-//+------------+------------------+----------+-------------+--------------------+------------+
-//|							From FIRST_MEMORY_ADDR to 0x05 memory address			  		 |
-//+------------------------------------------------------------------------------------------+
+//+----------------------------------------------------------------------------------------------------------+
+//|										General Data [6 Bytes]			  									 |
+//+------------+------------------+----------+-------------+--------------------+----------------------------+
+//| Init Byte  | Last memory ADDR | Max keys | Kesy number | Last used key ADDR | Flags						 |
+//+------------+------------------+----------+-------------+--------------------+----------------------------+
+//| 0b11001010 | HEX ADDR         | 0-255    | 0-255       | HEX ADDR           | 1-st write by OW flag      |
+//| 1Byte      | 1Byte            | 1Byte    | 1Byte       | 1Byte              | 1Byte     				 |
+//+------------+------------------+----------+-------------+--------------------+----------------------------+
+//|							From FIRST_MEMORY_ADDR to 0x05 memory address			  						 |
+//+----------------------------------------------------------------------------------------------------------+
 // TODO: Change the address to 32 bit values
 #define GENERAL_DATA_SIZE	6			// Max size = 6 Bytes (FROM 0x00 TO 0x05)
+//Flag masks:
+// NOTE: 1-st flag (0 - save by index and key number, 1 - save by OW flag)
+#define OVERWRITE_MODE			0x80	// Overwrite mode flag (0b1000_0000)
 
 //+---------------------------------------------------------------------------------------------+
 //|										Key Frame [22 Bytes] 			  						|
@@ -51,6 +55,8 @@
 #define KEY_FRAME_NAME_SIZE			5	// Name string
 #define KEY_FRAME_OVERWRITE_SIZE	1	// Overwrite flag
 #define KEY_FRAME_CRC_SIZE			1	// Check sum
+//Flag masks:
+#define OVERWRITE_FLAG			0x80	// Overwrite flag (0b1000_0000)
 
 
 /**
@@ -108,54 +114,12 @@ bool initMemory(uint32_t memorySizeBytes);
  */
 void readGeneralDataFromMemory(uint8_t *generalData);
 
-/**
- * @brief Reads a specific key or searches for a key by name in EEPROM memory.
- *
- * This function retrieves a key and its associated name from EEPROM memory, either from a given
- * address or by searching through all keys if a name is provided. The function can handle cases
- * where certain keys are marked with an overwrite flag, which indicates they should be skipped.
- *
- * @param[out] data       Pointer to the buffer where the retrieved key data will be stored.
- *                        The buffer must have sufficient space for both key and name data.
- * @param[in]  keysNumber Total number of keys stored in memory.
- * @param[in]  keyAddr    The address of the key to read. If set to 0, the function searches
- *                        for the key by name instead.
- * @param[in]  searchName Pointer to the name of the key to search for. If @p keyAddr is not 0,
- *                        this parameter is ignored.
- *
- * @return Returns @p 0 on success, or @p 1 if the key is not found or if @p searchName is
- *         @p NULL and @p keyAddr is 0.
- *
- * @note The function skips keys marked with an overwrite flag (0x80) when searching by name.
- *       It uses several constants such as @p KEY_FRAME_KEY_SIZE, @p KEY_FRAME_NAME_SIZE, and
- *       @p KEY_FRAME_SIZE for memory offsets and frame sizes.
- *
- * @warning Ensure that @p data has adequate memory allocated to store both key and name data.
- *          The function will enter a blocking state until all EEPROM read operations succeed.
- */
-uint8_t readKeyFromMemory(uint8_t *data, uint8_t keysNumber, uint8_t keyAddr, uint8_t *searchName);
+
+uint8_t readKeyFromMemory(uint8_t *data, uint8_t keysNumber, uint8_t keyAddr, char *searchName, uint8_t* wantedAddr);
 
 
-/**
- * @brief Writes general configuration data to EEPROM memory.
- *
- * This function populates a buffer with general configuration data, such as initialization byte,
- * maximum keys, current number of keys, and the last used key address, and then writes it to the
- * EEPROM memory. Each byte is written sequentially to avoid potential issues with larger
- * multi-byte writes.
- *
- * @param[in] maxKeys         Maximum number of keys that can be stored in memory.
- * @param[in] keysNumber      Current number of keys stored in memory.
- * @param[in] lastUsedKeyAddr Address of the last key used.
- *
- * @note The function uses @p FIRST_MEMORY_ADDR as the starting EEPROM address for the data,
- *       and writes each byte individually to address potential issues with block writes.
- *       The buffer size for general data is defined by @p GENERAL_DATA_SIZE.
- *
- * @warning If an error occurs during the EEPROM write, the function calls @p Error_Handler,
- *          which may stop execution or handle the error in an application-specific manner.
- */
-void writeGeneralDataInMemory(uint8_t maxKeys, uint8_t keysNumber, uint8_t lastUsedKeyAddr);	// Default values for this args are: NONE, 0, FIRST_KEY_ADDR
+
+void writeGeneralDataInMemory(uint8_t maxKeys, uint8_t keysNumber, uint8_t lastUsedKeyAddr, uint8_t flags);
 
 
 void writeKeyInMemory(uint32_t keyAddr, uint8_t *keyFrame);
@@ -164,7 +128,21 @@ void writeKeyInMemory(uint32_t keyAddr, uint8_t *keyFrame);
 void makeKeyFrame(uint8_t *keyFrame, uint8_t keyIndex, uint8_t keyLength, uint8_t *key, uint8_t nameLength, uint8_t *name, bool overwirteFlag, uint8_t crc);
 
 
+uint8_t findSpaceForKey(const uint8_t MAX_KEYS, const uint8_t KEYS_NUMBER, const uint8_t GENERAL_FLAGS);
+
+void getAllNames(char** namesArray, uint8_t keysNumber);
+
+void getAllOWFlagArr(bool* owFlagArray, const uint8_t MAX_KEYS);
+
+
+void setOWFlag(const uint8_t ADDR);
+
+
 void resetMemoryTest();
 void addKeyTest();
+
+void getEncodedKeyFromUser();
+void getKeysNameFromUser();
+
 
 #endif /* INC_MEMORYCONTROLLER_H_ */
