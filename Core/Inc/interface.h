@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include "stm32l4xx.h"
+//#include "iwdg.h"
 #include "gpio.h"
 #include "printer.h"
 
@@ -42,11 +43,11 @@ typedef enum {
 } WorkingMode;
 
 
-uint8_t printOptions();
+uint8_t printOptions(volatile uint32_t *prevWatchDogReset);
 
-uint8_t printSettings();
+uint8_t printSettings(volatile uint32_t *prevWatchDogReset);
 
-uint8_t printWrokingMode();
+uint8_t printWrokingMode(volatile uint32_t *prevWatchDogReset);
 
 
 #endif /* INC_INTERFACE_H_ */

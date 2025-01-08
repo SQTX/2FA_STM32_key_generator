@@ -37,7 +37,7 @@ typedef struct tm DateTime_t;
  *
  * @warning The function assumes that the RTC is in binary format (RTC_FORMAT_BIN) when reading the time and date.
  */
-uint8_t initClockRTC(RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr);
+uint8_t initClockRTC(volatile uint32_t *prevWatchDogReset, RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr);
 
 
 /**
@@ -80,7 +80,7 @@ uint32_t getTimeStamp(RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr);
 void printLocalTime(RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr);
 
 
-void getTimeFromUser(RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr);
+void getTimeFromUser(volatile uint32_t *prevWatchDogReset, RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr);
 
 
 #endif /* INC_CLOCKCONTROL_H_ */

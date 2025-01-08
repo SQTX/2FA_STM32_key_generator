@@ -8,13 +8,13 @@
 #include "features.h"
 
 
-void getEncodedKeyFromUser(char* ,int);
-void getKeysNameFromUser(char*, int);
+void getEncodedKeyFromUser(volatile uint32_t *prevWatchDogReset, char* ,int);
+void getKeysNameFromUser(volatile uint32_t *prevWatchDogReset, char*, int);
 
 //********************************************************************************************
 // PUBLIC
 //********************************************************************************************
-int8_t addNewKey(const uint8_t MAX_KEYS, uint8_t* keysNumber, uint8_t* generalFlags) {
+int8_t addNewKey(volatile uint32_t *prevWatchDogReset, const uint8_t MAX_KEYS, uint8_t* keysNumber, uint8_t* generalFlags) {
 //	--------------------------------------------------
 //	Get name and encoded key from user:
 //	--------------------------------------------------
@@ -22,8 +22,8 @@ int8_t addNewKey(const uint8_t MAX_KEYS, uint8_t* keysNumber, uint8_t* generalFl
 	char encodedKey[MAX_ENCODED_KEY_SIZE+1] = {0};
 	uint8_t key[MAX_KEY_SIZE] = {0};
 
-	getKeysNameFromUser(name, PRINT_ENTRED_STRINGS);
-	getEncodedKeyFromUser(encodedKey, PRINT_ENTRED_STRINGS);
+	getKeysNameFromUser(prevWatchDogReset, name, PRINT_ENTRED_STRINGS);
+	getEncodedKeyFromUser(prevWatchDogReset, encodedKey, PRINT_ENTRED_STRINGS);
 
 
 //	--------------------------------------------------
@@ -127,12 +127,12 @@ int8_t addNewKey(const uint8_t MAX_KEYS, uint8_t* keysNumber, uint8_t* generalFl
 }
 
 
-int8_t searchKey(uint8_t keysNumber, uint8_t* keyAddr) {
+int8_t searchKey(volatile uint32_t *prevWatchDogReset, uint8_t keysNumber, uint8_t* keyAddr) {
 //	--------------------------------------------------
 //	Get key's name from user:
 //	--------------------------------------------------
 	char name[MAX_KEYS_NAME_SIZE+1] = {0};
-	getKeysNameFromUser(name, PRINT_ENTRED_STRINGS);
+	getKeysNameFromUser(prevWatchDogReset, name, PRINT_ENTRED_STRINGS);
 
 
 //	--------------------------------------------------
@@ -176,12 +176,12 @@ int8_t searchKey(uint8_t keysNumber, uint8_t* keyAddr) {
 }
 
 
-int8_t deleteKey(uint8_t* keysNumber) {
+int8_t deleteKey(volatile uint32_t *prevWatchDogReset, uint8_t* keysNumber) {
 	//	--------------------------------------------------
 	//	Get key's name from user:
 	//	--------------------------------------------------
 		char name[MAX_KEYS_NAME_SIZE+1] = {0};
-		getKeysNameFromUser(name, PRINT_ENTRED_STRINGS);
+		getKeysNameFromUser(prevWatchDogReset, name, PRINT_ENTRED_STRINGS);
 
 
 	//	--------------------------------------------------
@@ -244,12 +244,13 @@ void showKeysList(uint8_t keysNumber) {
 //********************************************************************************************
 // PRIVATE
 //********************************************************************************************
-void getEncodedKeyFromUser(char* encodedKey, int printIt) {
+void getEncodedKeyFromUser(volatile uint32_t *prevWatchDogReset, char* encodedKey, int printIt) {
 	uint8_t status = {1};
 
 	printf("Enter your key: \t\t(max 21 characters)\n");
 	fflush(stdout);
 	while(status != 0) {
+		resetWatchDog(prevWatchDogReset);
 		uint8_t value = {0};
 
 		if (HAL_UART_Receive(&huart2, &value, 1, 0) == HAL_OK) {
@@ -274,12 +275,13 @@ void getEncodedKeyFromUser(char* encodedKey, int printIt) {
 }
 
 
-void getKeysNameFromUser(char* name, int printIt) {
+void getKeysNameFromUser(volatile uint32_t *prevWatchDogReset, char* name, int printIt) {
 	uint8_t status = {1};
 
 	printf("Enter name for your key: \t(max 5 characters)\n");
 	fflush(stdout);
 	while(status != 0) {
+		resetWatchDog(prevWatchDogReset);
 		uint8_t value = {0};
 
 		if (HAL_UART_Receive(&huart2, &value, 1, 0) == HAL_OK) {
