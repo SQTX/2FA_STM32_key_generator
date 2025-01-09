@@ -17,6 +17,7 @@ char *SettingListPtr[] = {"Change module mode", "Set time", "Set time zone", "Ba
 const uint8_t WORKING_MODE_NUMBER = 2;
 char *WorkingModeListPtr[] = {"PASSIVE", "ACTIVE"};
 
+
 enum ListType {
 	TYPE_OPTIONS = 0,
 	TYPE_SETTINGS,
@@ -168,16 +169,21 @@ uint8_t printWrokingMode(volatile uint32_t *prevWatchDogReset) {
 //********************************************************************************************
 // PRIVATE
 //********************************************************************************************
+/**
+ * A function that displays basic control information and selects specific functions.
+ */
 void printControlInfo(int infoType) {
 	switch(infoType) {
 		case TYPE_OPTIONS:
-			printf("List of available options:\n");
+			printSubTitle("List of available options:");
 			break;
 		case TYPE_SETTINGS:
-			printf("List of available settings:\n");
+			printSubTitle("List of available settings:");
 			break;
 		case TYPE_WORK_MODE:
-			printf("List of available modes:\n");
+			printSubTitle("List of available modes:");
+			printf("PASSIVE_MODE\t- The device itself generates a token every 0 and 30 seconds\n");
+			printf("ACTIVE_MODE\t- The device generates a token only when the button is pressed\n");
 			break;
 		default:
 			printConsolePostfix(PRI_ERROR);

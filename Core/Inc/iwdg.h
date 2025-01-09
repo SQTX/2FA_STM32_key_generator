@@ -41,7 +41,24 @@ extern IWDG_HandleTypeDef hiwdg;
 void MX_IWDG_Init(void);
 
 /* USER CODE BEGIN Prototypes */
+
+/**
+ * @brief Periodically resets the watchdog timer to prevent system reset and toggles an indicator LED.
+ *
+ * This function checks the elapsed time since the last watchdog reset. If at least 2000 ms have passed, it toggles
+ * an LED to provide a visual indicator and refreshes the watchdog timer, preventing the system from resetting.
+ * The function then updates the `prevWatchDogReset` timestamp to the current time.
+ *
+ * @param[in,out] prevWatchDogReset Pointer to a variable storing the last reset timestamp.
+ *                                  Updated to the current time after each reset.
+ *
+ * @note Ensure that `prevWatchDogReset` points to a volatile variable, as it is modified in real-time by this function.
+ *
+ * @warning This function assumes that the IWDG (Independent Watchdog) is initialized and enabled. Proper setup is necessary for the function to work as expected.
+ */
 void resetWatchDog(volatile uint32_t *prevWatchDogReset);
+
+
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

@@ -47,25 +47,28 @@ void clearTerminal() {
 	for(int i = 0; i < NEW_LINE_NUMBERS; i++) printf("\n");
 }
 
+
 void printTitle(const char *str) {
 	printLineSeparator('=');
     while (*str) {
-        putchar(toupper(*str));  // Konwertuje i drukuje każdy znak jako wielką literę
+        putchar(toupper(*str));  // Convert and print all char like upper case
         str++;
     }
-    putchar('\n');  // Przejście do nowej linii po wydrukowaniu całego ciągu
+    putchar('\n');
     printLineSeparator('=');
 }
+
 
 void printSubTitle(const char *str) {
 	printLineSeparator('-');
     while (*str) {
-        putchar(*str);  // Konwertuje i drukuje każdy znak jako wielką literę
+        putchar(*str);  		// Print single char
         str++;
     }
-    putchar('\n');  // Przejście do nowej linii po wydrukowaniu całego ciągu
+    putchar('\n');
     printLineSeparator('-');
 }
+
 
 void printStartInfo() {
 	clearTerminal();
@@ -80,7 +83,11 @@ void printStartInfo() {
 //********************************************************************************************
 // PRIVATE
 //********************************************************************************************
+/**
+ * Function that prints the project logo in ASCII ART form.
+ */
 void printAsciiArt() {
+//	Pattern:
 //	  ____  _____ _      ____ _____ __  __   _  _________   __   ____ _____ _   _
 //	 |___ \|  ___/ \    / ___|_   _|  \/  | | |/ | ____\ \ / /  / ___| ____| \ | |
 //	   __) | |_ / _ \   \___ \ | | | |\/| | | ' /|  _|  \ V /  | |  _|  _| |  \| |
@@ -96,6 +103,9 @@ void printAsciiArt() {
 }
 
 
+/**
+ * Function that prints the project license.
+ */
 void printLicense() {
     printf("MIT License\n\n");
     printf("Copyright (c) 2024 Jakub SQTX Sitarczyk\n\n");

@@ -3,14 +3,15 @@
  *
  *  Created on: Oct 24, 2024
  *      Author: Jakub SQTX Sitarczyk
+ *  Inspired by: https://forbot.pl/blog/kurs-stm32l4-zewnetrzna-pamiec-eeprom-i2c-id47820
  */
 
 #ifndef INC_EEPROM_H_
 #define INC_EEPROM_H_
 
+//Stm:
 #include "stm32l4xx.h"
 #include "i2c.h"
-
 
 #define EEPROM_ADDR     0xA0
 #define WRITE_TIMEOUT   6

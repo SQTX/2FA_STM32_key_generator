@@ -171,7 +171,6 @@ int main(void)
   volatile uint32_t prevWatchDogReset = HAL_GetTick();
 
 //  resetMemoryTest();		// TEST FUNCTION
-//  addKeyTest();			// TEST FUNCTION
 
 	printStartInfo();
 	printTitle("Device initialization process");
@@ -195,7 +194,7 @@ int main(void)
 		}
 	}
 
-//  addKeyTest();
+//  addKeyTest();			// TEST FUNCTION
 
 //  ********************************************************************************************
 //  Initializing the RTC clock
@@ -243,85 +242,10 @@ int main(void)
 //  ********************************************************************************************
 	searchAndSetKey(keysNumber, &currentKeyAddr);
 
-	/*
-	 //  ********************************************************************************************
-	 //  Conversion Encoded key to normal key (HARD_CODE ENCODED KEY - NOT USE WITH MEMORY)
-	 //  ********************************************************************************************
-	 uint8_t encodedLength = {(sizeof encodedKey)-1};					// Encoded key length (without '\n')
-	 printf("Code: %s\t| Size: %u\n", encodedKey, encodedLength);
-
-
-	 uint8_t *key = {NULL};												// Empty pointer for key array
-	 uint8_t keySize = {base32ToHex(encodedKey, encodedLength, &key)};	// Convert key from BASE32 to Hex
-	 if(key == NULL) printf("[ERROR] Failed to allocate memory.\n");		// ERROR alert
-
-
-	 printf("Token size: %u\n", keySize);
-	 printf("Dekodowany tekst: ");
-	 for (int i = 0; i < keySize; i++) {
-	 //		printf("%c", key[i]);
-	 printf("0x%x ", key[i]);
-	 }
-	 printf("\n");
-	 */
-
-//  const uint8_t MAX_KEYS = 5;
-//  uint8_t keysNumber = 2;
-//  uint8_t currentKeyAddr = 0x1c;
-//  uint8_t generalFlags = 0x00;
-
-//  searchKey(keysNumber);
-////
-//  searchKey(keysNumber);
-////
-//  addNewKey(MAX_KEYS, &keysNumber, &generalFlags);
-
-//  uint8_t currentKey[13] = {0};		// Container for key from memory
-//  uint8_t currentKeyName[5] = {0};	// Container for name from memory
-//  uint8_t data[13+5] = {0};			// Container for all data from memory
-//
-//  readKeyFromMemory(data, keysNumber, currentKeyAddr, NULL, currentKeyAddr);
-//
-//
-//  for(int i = 0; i < 13; i++) currentKey[i] = data[i];			//  Get key from data
-//  for(int i = 0; i < 5; i++) currentKeyName[i] = data[i+13];	//  Get name from data
-//
-//
-//	printf("1.Dekodowany tekst: ");
-//	for (int i = 0; i < 10; i++) {
-////		printf("%c", key[i]);
-//	    printf("0x%x ", currentKey[i]);
-//	}
-//	printf("\n");
-//  printf("1.NewName: %s\n", currentKeyName);
-
-//  currentKeyAddr = 0x06;
-//
-//  uint8_t currentKey2[13] = {0};		// Container for key from memory
-//  uint8_t currentKeyName2[5] = {0};	// Container for name from memory
-//  uint8_t data2[13+5] = {0};			// Container for all data from memory
-//
-//  readKeyFromMemory(data2, keysNumber, currentKeyAddr, NULL, currentKeyAddr);
-//
-//
-//  for(int i = 0; i < 13; i++) currentKey2[i] = data2[i];			//  Get key from data
-//  for(int i = 0; i < 5; i++) currentKeyName2[i] = data2[i+13];	//  Get name from data
-//
-//	printf("2.Dekodowany tekst: ");
-//	for (int i = 0; i < 10; i++) {
-////		printf("%c", key[i]);
-//	    printf("0x%x ", currentKey2[i]);
-//	}
-//	printf("\n");
-//  printf("2.NewName: %s\n", currentKeyName2);
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
-//  printf("-----------------------------------------------------------\n");
-//  showKeysList(keysNumber);
 	bool tokenWasGenerate = false;
 	uint32_t nextGenerate = 0;
 
@@ -344,29 +268,26 @@ int main(void)
 						case CHANGE_KEY:
 							uint8_t newKeyAddr = {0};
 
-							searchKey(&prevWatchDogReset, keysNumber, &newKeyAddr);
+							uint8_t result = searchKey(&prevWatchDogReset, keysNumber, &newKeyAddr);
 
-//							Set new key:
-//							free(key);
-//							free(name);
-							searchAndSetKey(keysNumber, &newKeyAddr);
+//							If key is founded:
+							if(result == 0) {
+//								Set new key:
+								searchAndSetKey(keysNumber, &newKeyAddr);
+							}
 
 							break;
 						case ADD_KEY:
 							addNewKey(&prevWatchDogReset, MAX_KEYS, &keysNumber, &generalFlags, &currentKeyAddr);
 
-////							Set new key:
-//							free(key);
-//							free(name);
+//							Set new key:
 							searchAndSetKey(keysNumber, &newKeyAddr);
 
 							break;
 						case DELETE_KEY:
 							deleteKey(&prevWatchDogReset, MAX_KEYS, &keysNumber, &generalFlags, &currentKeyAddr);
 
-////							Set new key:
-//							free(key);
-//							free(name);
+//							Set new key:
 							searchAndSetKey(keysNumber, &currentKeyAddr);
 
 							break;
@@ -455,8 +376,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//		RESSET WATCHDOG IN MAIN LOOP:
-		resetWatchDog(&prevWatchDogReset);
+		resetWatchDog(&prevWatchDogReset);		// RESET WATCHDOG IN MAIN LOOP:
 	}
 	free(key);
 	free(name);
@@ -530,20 +450,15 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 					getTimeStamp(&rtcTime, &rtcDate)) };// Generate TOTP token
 			printf("Token:\t\t[%06lu]\n", token);
 		}
-
-//	  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 	}
 
+//	********************************************************************************************
+//	Turn OPTIONS MODE on
+//	********************************************************************************************
 	if (!OPT_MODE) {
 		if (GPIO_Pin == USER_BTN_UP_Pin || GPIO_Pin == USER_BTN_DOWN_Pin) {
 			OPT_MODE = true;
 		}
-
-//	  if(GPIO_Pin == USER_BTN_UP_Pin) {
-//		  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-//	  }else if(GPIO_Pin == USER_BTN_DOWN_Pin) {
-//		  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-//	  }
 	}
 }
 /* USER CODE END 4 */

@@ -52,6 +52,9 @@ void MX_IWDG_Init(void)
 }
 
 /* USER CODE BEGIN 1 */
+//********************************************************************************************
+// PUBLIC
+//********************************************************************************************
 void resetWatchDog(volatile uint32_t *prevWatchDogReset) {
 	uint32_t now = HAL_GetTick();
 	if (now - *prevWatchDogReset >= 2000) {

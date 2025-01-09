@@ -1,3 +1,8 @@
+/**
+ * Author: Netthaw
+ * GitHub: https://github.com/Netthaw/TOTP-MCU/tree/master
+ */
+
 #include "TOTP.h"
 #include "sha1.h"
 

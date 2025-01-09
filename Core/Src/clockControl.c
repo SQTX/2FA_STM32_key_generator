@@ -4,6 +4,7 @@
  *  Created on: Oct 16, 2024
  *      Author: Jakub SQTX Sitarczyk
  */
+
 #include "clockControl.h"
 
 
@@ -20,7 +21,7 @@ uint8_t initClockRTC(volatile uint32_t *prevWatchDogReset, RTC_TimeTypeDef *rtcT
 	HAL_RTC_GetDate(&hrtc, rtcDatePtr, RTC_FORMAT_BIN);
 
 	if(rtcDatePtr->Year <= 0 && rtcTimePtr->Hours <= 0) {
-		printf("RTC\t[not configured]\n");
+		printf("RTC\t\t\t[Not configured]\n");
 		getTimeFromUser(prevWatchDogReset, rtcTimePtr, rtcDatePtr);
 		return 1;
 	}
@@ -52,8 +53,10 @@ uint32_t getTimeStamp(RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr) 
 
 
 void printLocalTime(RTC_TimeTypeDef *rtcTimePtr, RTC_DateTypeDef *rtcDatePtr) {
+	int printHour = rtcTimePtr->Hours + TIMEZONE;
+	if(printHour == 24) printHour = 0;
 	printf("Local time:\t\t\t[%02d-%02d-%04d, %02d:%02d:%02d]\n", rtcDatePtr->Date, rtcDatePtr->Month, rtcDatePtr->Year + 2000,
-				rtcTimePtr->Hours + TIMEZONE, rtcTimePtr->Minutes, rtcTimePtr->Seconds);
+			printHour, rtcTimePtr->Minutes, rtcTimePtr->Seconds);
 }
 
 
@@ -74,12 +77,13 @@ void getTimeFromUser(volatile uint32_t *prevWatchDogReset, RTC_TimeTypeDef *rtcT
 
 			if (flag == 0) {
 //				time_t localTimestamp = mktime(dataTimePtr);
-				printf("Local:\t %d-%d-%d,", datetime.tm_mday, datetime.tm_mon + 1, datetime.tm_year + 1900);
-				printf("%d:%d:%d\n", datetime.tm_hour, datetime.tm_min, datetime.tm_sec);
+				printf("Local:\t %02d-%02d-%02d,", datetime.tm_mday, datetime.tm_mon + 1, datetime.tm_year + 1900);
+				printf("%02d:%02d:%02d\n", datetime.tm_hour, datetime.tm_min, datetime.tm_sec);
+
 
 				datetime.tm_hour -= TIMEZONE;
-				printf("UTC:\t %d-%d-%d,", datetime.tm_mday, datetime.tm_mon + 1, datetime.tm_year + 1900);
-				printf("%d:%d:%d\n", datetime.tm_hour, datetime.tm_min, datetime.tm_sec);
+				printf("UTC:\t %02d-%02d-%02d,", datetime.tm_mday, datetime.tm_mon + 1, datetime.tm_year + 1900);
+				printf("%02d:%02d:%02d\n", datetime.tm_hour, datetime.tm_min, datetime.tm_sec);
 
 //				Set time in RTC:
 				rtcTimePtr->Hours = datetime.tm_hour;
