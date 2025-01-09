@@ -10,11 +10,13 @@
 
 #include <stdbool.h>
 #include "stm32l4xx.h"
+#include "iwdg.h"
 #include "usart.h"
 #include "dataFromUser.h"
 #include "dataConverter.h"
 #include "base32.h"
 #include "memoryController.h"
+#include "printer.h"
 
 
 #define MAX_KEYS_NAME_SIZE			5	// Name string
@@ -25,11 +27,11 @@
 #define PRINT_ENTRED_STRINGS		0	// 0 - OFF | 1 - ON
 
 
-int8_t addNewKey(volatile uint32_t *prevWatchDogReset, const uint8_t MAX_KEYS, uint8_t* keysNumber, uint8_t* generalFlags);
+int8_t addNewKey(volatile uint32_t *prevWatchDogReset, const uint8_t MAX_KEYS, uint8_t* keysNumber, uint8_t* generalFlags, uint8_t* activeKeyAddr);
 
 int8_t searchKey(volatile uint32_t *prevWatchDogReset, uint8_t keysNumber, uint8_t* keyAddr);
 
-int8_t deleteKey(volatile uint32_t *prevWatchDogReset, uint8_t* keysNumber);
+int8_t deleteKey(volatile uint32_t *prevWatchDogReset, const uint8_t MAX_KEYS, uint8_t* keysNumber, uint8_t* generalFlags, uint8_t* activeKeyAddr);
 
 void showKeysList(uint8_t keysNumber);
 

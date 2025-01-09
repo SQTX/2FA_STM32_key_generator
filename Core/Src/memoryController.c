@@ -47,7 +47,9 @@ bool initMemory(uint32_t memorySizeBytes) {
 
 //------ Reading data from memory ------------------------------------------------------------
 void readGeneralDataFromMemory(uint8_t *generalData) {
-	while (eeprom_read(FIRST_MEMORY_ADDR, generalData, GENERAL_DATA_SIZE) != HAL_OK) {}
+	for(uint8_t i = 0; i < GENERAL_DATA_SIZE; i++) {
+		while (eeprom_read(FIRST_MEMORY_ADDR+i, &generalData[i], sizeof(generalData[i])) != HAL_OK) {}
+	}
 }
 
 
@@ -136,8 +138,8 @@ void writeGeneralDataInMemory(uint8_t maxKeys, uint8_t keysNumber, uint8_t lastU
 
 	generalData[5] = flags;		// General data flags
 
-
 	for(int i = 0; i < GENERAL_DATA_SIZE; i++) {
+//		printf("Zapisane zostaly: %x \n", generalData[i]);
 		if(eeprom_write(FIRST_MEMORY_ADDR+i, &generalData[i], sizeof(generalData[i])) != HAL_OK) Error_Handler();
 	}
 }
@@ -280,6 +282,11 @@ void setOWFlag(const uint8_t ADDR) {
 	const uint8_t JUMP_TO_FLAG_VALUE = 20;
 	uint8_t flagsByte = {0x00};
 
+//	Reset all bits:
+	for (int i = 0; i < KEY_FRAME_SIZE; i++) {
+		while (eeprom_read(ADDR+i, &flagsByte, 1) != HAL_OK) {}
+	}
+
 //	Get flag byte:
 	while (eeprom_read(ADDR+JUMP_TO_FLAG_VALUE, &flagsByte, 1) != HAL_OK) {}
 
@@ -293,8 +300,10 @@ void setOWFlag(const uint8_t ADDR) {
 // TEST
 //********************************************************************************************
 void resetMemoryTest() {
-	uint8_t foo = 0xA1;
-	if(eeprom_write(FIRST_MEMORY_ADDR, &foo, sizeof(foo)) != HAL_OK) Error_Handler();
+	uint8_t foo = 0x00;
+	for(uint8_t i = 0; i < 16; i++) {
+		if(eeprom_write(FIRST_MEMORY_ADDR+i, &foo, sizeof(foo)) != HAL_OK) Error_Handler();
+	}
 }
 
 

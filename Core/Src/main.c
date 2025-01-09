@@ -180,6 +180,8 @@ int main(void)
 //  ********************************************************************************************
 //  Initializing the Memory
 //  ********************************************************************************************
+	bool missingKey = false;
+
 	if (checkMemory()) {
 		printf("Memory status\t\t\t[OK]\n");
 	} else {
@@ -187,7 +189,7 @@ int main(void)
 		printf("Memory initializing...\n");
 		if (initMemory(128)) {
 			printf("Memory initialize\t\t[OK]\n");
-//		  TODO: ADD NEW, first KEY
+			missingKey = true;
 		} else {
 			printf("Memory initialize\t\t[ERROR]\n");
 		}
@@ -219,6 +221,22 @@ int main(void)
 	printf("Epoch TimeStamp:\t\t[%ld]\n", getTimeStamp(&rtcTime, &rtcDate));// Show current epoch TimeStamp
 	printf("Maximum keys in memory:\t\t[%u]\n", MAX_KEYS);
 	printf("Current number of keys:\t\t[%u]\n", keysNumber);
+
+
+//	********************************************************************************************
+//	Initial add first key
+//	********************************************************************************************
+	if(missingKey) {
+		addNewKey(&prevWatchDogReset, MAX_KEYS, &keysNumber, &generalFlags, &currentKeyAddr);
+		keysNumber = 1;
+		currentKeyAddr = 0x06;
+
+		printSubTitle("After add first key:");
+		printf("Maximum keys in memory:\t\t[%u]\n", MAX_KEYS);
+		printf("Current number of keys:\t\t[%u]\n", keysNumber);
+		printf("New key address:\t\t[%x]\n", currentKeyAddr);
+	}
+
 
 //  ********************************************************************************************
 //  Get default/last used key from memory
@@ -301,6 +319,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
 //  printf("-----------------------------------------------------------\n");
 //  showKeysList(keysNumber);
 	bool tokenWasGenerate = false;
@@ -323,21 +342,33 @@ int main(void)
 							showKeysList(keysNumber);
 							break;
 						case CHANGE_KEY:
-							uint8_t currentKeyAddr = { 0 };
+							uint8_t newKeyAddr = {0};
 
-							searchKey(&prevWatchDogReset, keysNumber, &currentKeyAddr);
+							searchKey(&prevWatchDogReset, keysNumber, &newKeyAddr);
 
-							free(key);
-							free(name);
-
-							searchAndSetKey(keysNumber, &currentKeyAddr);
+//							Set new key:
+//							free(key);
+//							free(name);
+							searchAndSetKey(keysNumber, &newKeyAddr);
 
 							break;
 						case ADD_KEY:
-							addNewKey(&prevWatchDogReset, MAX_KEYS, &keysNumber, &generalFlags);
+							addNewKey(&prevWatchDogReset, MAX_KEYS, &keysNumber, &generalFlags, &currentKeyAddr);
+
+////							Set new key:
+//							free(key);
+//							free(name);
+							searchAndSetKey(keysNumber, &newKeyAddr);
+
 							break;
 						case DELETE_KEY:
-							deleteKey(&prevWatchDogReset, &keysNumber);
+							deleteKey(&prevWatchDogReset, MAX_KEYS, &keysNumber, &generalFlags, &currentKeyAddr);
+
+////							Set new key:
+//							free(key);
+//							free(name);
+							searchAndSetKey(keysNumber, &currentKeyAddr);
+
 							break;
 						case SETTINGS:
 							HAL_Delay(250);
