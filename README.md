@@ -22,6 +22,12 @@ This repository contains the implementation of a physical two-factor authenticat
 
 **Keywords:** *2FA, STM32, TOTP, authentication, token generator*.
 
+<p align="center">
+   <img src="./docs/img/photo.jpeg" width=450px>
+   <br>
+   <b>Fig. 1</b> <i>Photo of the created prototype</i>
+</p>
+
 ### Features
 - **Platform Independence**: Generates authentication tokens every 30 seconds.
 - **Secure Storage**: Private keys are stored in non-volatile EEPROM memory.
