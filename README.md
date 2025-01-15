@@ -65,8 +65,8 @@ This repository contains the implementation of a physical two-factor authenticat
 
 ## Documentation
 The complete technical documentation for this project is available in the following files:
-- [English Version](),
-- [Polish Version]().
+- [English Version](https://github.com/SQTX/2FA_STM32_key_generator/blob/documentation/docs/ENG-tech_doc.md),
+- [Polish Version](https://github.com/SQTX/2FA_STM32_key_generator/blob/documentation/docs/PL-tech_doc.md).
 
 
 ## ©️ MIT License
